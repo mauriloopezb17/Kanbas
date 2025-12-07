@@ -41,9 +41,9 @@ const ProjectsDashboard = ({ user, onProjectClick }) => {
             {/* Botón Agregar Proyecto */}
             <div 
               onClick={() => setIsModalOpen(true)}
-              className="w-full h-48 rounded-2xl border-2 border-dashed border-[#0097b2] bg-[#cbd5e1]/50 flex items-center justify-center cursor-pointer hover:bg-[#cbd5e1] transition"
+              className="w-full h-48 rounded-2xl border-2 border-dashed border-kanbas-blue bg-[#cbd5e1]/50 flex items-center justify-center cursor-pointer hover:bg-[#cbd5e1] transition"
             >
-              <div className="bg-[#0097b2] rounded-full p-1">
+              <div className="bg-kanbas-blue rounded-full p-1">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>

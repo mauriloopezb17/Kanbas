@@ -4,10 +4,10 @@ const SignupForm = ({ onSwitchToLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0097b2]">
+    <div className="min-h-screen flex items-center justify-center animate-gradient-bg">
       <div className="bg-[#f0f0f5] p-8 rounded-[2rem] shadow-lg w-full max-w-2xl mx-4">
         <div className="flex justify-center mb-8">
-          <h1 className="text-6xl font-bold text-[#0097b2] drop-shadow-[4px_4px_0px_rgba(92,92,138,0.5)] tracking-wide font-sans">
+          <h1 className="text-6xl font-bold text-kanbas-blue drop-shadow-[4px_4px_0px_rgba(92,92,138,0.5)] tracking-wide font-sans">
             kanbas
           </h1>
         </div>
@@ -20,7 +20,7 @@ const SignupForm = ({ onSwitchToLogin }) => {
             <input
               type="text"
               placeholder="nombreEjemplo01"
-              className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-[#8da3b6] text-gray-700 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#0097b2] focus:border-transparent"
+              className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-[#8da3b6] text-gray-700 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue focus:border-transparent"
             />
           </div>
 
@@ -32,7 +32,7 @@ const SignupForm = ({ onSwitchToLogin }) => {
               <input
                 type="text"
                 placeholder="Juan"
-                className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-[#8da3b6] text-gray-700 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#0097b2] focus:border-transparent"
+                className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-[#8da3b6] text-gray-700 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue focus:border-transparent"
               />
             </div>
             <div>
@@ -42,7 +42,7 @@ const SignupForm = ({ onSwitchToLogin }) => {
               <input
                 type="text"
                 placeholder="Perez"
-                className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-[#8da3b6] text-gray-700 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#0097b2] focus:border-transparent"
+                className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-[#8da3b6] text-gray-700 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue focus:border-transparent"
               />
             </div>
           </div>
@@ -54,7 +54,7 @@ const SignupForm = ({ onSwitchToLogin }) => {
             <input
               type="email"
               placeholder="Ejemplo@correo.com"
-              className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-[#8da3b6] text-gray-700 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#0097b2] focus:border-transparent"
+              className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-[#8da3b6] text-gray-700 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue focus:border-transparent"
             />
           </div>
 
@@ -66,12 +66,12 @@ const SignupForm = ({ onSwitchToLogin }) => {
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="********"
-                className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-[#8da3b6] text-gray-700 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#0097b2] focus:border-transparent pr-12"
+                className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-[#8da3b6] text-gray-700 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue focus:border-transparent pr-12"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#0097b2] hover:text-[#007a91] focus:outline-none"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-kanbas-blue hover:text-blue-600 focus:outline-none"
               >
                 {showPassword ? (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -91,13 +91,13 @@ const SignupForm = ({ onSwitchToLogin }) => {
             <button
               type="button"
               onClick={onSwitchToLogin}
-              className="text-[#0097b2] font-bold hover:underline text-sm sm:text-base"
+              className="text-kanbas-blue font-bold hover:underline text-sm sm:text-base"
             >
               Iniciar Sesion
             </button>
             <button
               type="submit"
-              className="bg-[#0097b2] text-white font-bold py-3 px-8 rounded-full hover:bg-[#007a91] transition duration-300 shadow-md"
+              className="bg-kanbas-blue text-white font-bold py-3 px-8 rounded-full hover:bg-blue-600 transition duration-300 shadow-md"
             >
               Crear cuenta
             </button>

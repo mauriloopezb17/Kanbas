@@ -28,11 +28,11 @@ body {
   }
 
   .animate-modal-grow {
-    animation: modal-grow 0.4s ease-out forwards;
+    animation: modal-grow 0.4s ease-out both;
   }
 
   .animate-fade-in {
-    animation: fade-in 0.25s ease-out forwards;
+    animation: fade-in 0.25s ease-out both;
   }
 
   @keyframes fade-out {
@@ -46,5 +46,27 @@ body {
 
   .animate-fade-out {
     animation: fade-out 0.25s ease-out forwards;
+  }
+
+  @keyframes gradient-bg {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  .animate-gradient-bg {
+    background: linear-gradient(-45deg, #0ea5e9, #2563eb, #7c3aed);
+    background-size: 400% 400%;
+    animation: gradient-bg 8s ease infinite;
+  }
+
+  .no-calendar-icon::-webkit-calendar-picker-indicator {
+    display: none !important;
   }
 }

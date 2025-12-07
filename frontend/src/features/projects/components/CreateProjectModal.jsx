@@ -15,6 +15,7 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
   // Input States
   const [projectName, setProjectName] = React.useState('');
   const [projectDescription, setProjectDescription] = React.useState('');
+  const [deadline, setDeadline] = React.useState('');
   const [emailInput, setEmailInput] = React.useState('');
   const [newTeamName, setNewTeamName] = React.useState('');
   const [newTeamMembers, setNewTeamMembers] = React.useState([]);
@@ -28,6 +29,7 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
   const [hasAnimated, setHasAnimated] = React.useState(false);
   const containerRef = React.useRef(null);
   const contentRef = React.useRef(null);
+  const dateInputRef = React.useRef(null);
 
   // Reset to step 1 when opening
   React.useEffect(() => {
@@ -37,6 +39,7 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
       setSdm(null);
       setProjectName('');
       setProjectDescription('');
+      setDeadline('');
       setEmailInput('');
       setNewTeamName('');
       setNewTeamMembers([]);
@@ -188,7 +191,7 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
                     onFocus={() => {
                       if (errors.projectName) setErrors({...errors, projectName: false});
                     }}
-                    className={`w-full px-4 py-3 rounded-full bg-[#cbd5e1] border text-gray-800 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#0097b2] ${errors.projectName ? 'border-red-500 ring-1 ring-red-500' : 'border-[#0097b2]'}`} 
+                    className={`w-full px-4 py-3 rounded-full bg-[#cbd5e1] border text-gray-800 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue ${errors.projectName ? 'border-red-500 ring-1 ring-red-500' : 'border-kanbas-blue'}`} 
                   />
                 </div>
                 <div>
@@ -204,21 +207,44 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
                     onFocus={() => {
                       if (errors.projectDescription) setErrors({...errors, projectDescription: false});
                     }}
-                    className={`w-full px-4 py-3 rounded-3xl bg-[#cbd5e1] border text-gray-800 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#0097b2] resize-none ${errors.projectDescription ? 'border-red-500 ring-1 ring-red-500' : 'border-[#0097b2]'}`}
+                    className={`w-full px-4 py-3 rounded-3xl bg-[#cbd5e1] border text-gray-800 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue resize-none ${errors.projectDescription ? 'border-red-500 ring-1 ring-red-500' : 'border-kanbas-blue'}`}
                   ></textarea>
                 </div>
                 <div>
                   <label className="block text-black text-lg font-bold mb-2">Fecha Limite</label>
                   <div className="relative w-48">
-                    <input type="text" placeholder="DD/MM/AA" className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-[#0097b2] text-gray-800 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#0097b2]" />
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#0097b2]">
+                    {/* Visible Formatted Input */}
+                    <input 
+                      type="text" 
+                      placeholder="DD/MM/AAAA"
+                      readOnly
+                      value={deadline ? deadline.split('-').reverse().join('/') : ''}
+                      onClick={() => dateInputRef.current?.showPicker()}
+                      className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-kanbas-blue text-gray-800 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue cursor-pointer" 
+                    />
+                    
+                    {/* Hidden Native Date Input */}
+                    <input 
+                      ref={dateInputRef}
+                      type="date" 
+                      value={deadline}
+                      onChange={(e) => setDeadline(e.target.value)}
+                      className="absolute inset-0 opacity-0 pointer-events-none w-full h-full"
+                      tabIndex={-1}
+                    />
+
+                    {/* Custom Icon Trigger */}
+                    <div 
+                      onClick={() => dateInputRef.current?.showPicker()}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-kanbas-blue cursor-pointer hover:text-blue-600 transition"
+                    >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center justify-end space-x-4 pt-4">
-                  <button type="button" onClick={onClose} className="text-[#0097b2] font-bold hover:underline text-lg">Cancelar</button>
-                  <button type="button" onClick={() => handleStepTransition(2)} className="bg-[#0097b2] text-white font-bold py-3 px-8 rounded-full hover:bg-[#007a91] transition duration-300 shadow-md">Siguiente &gt;</button>
+                  <button type="button" onClick={onClose} className="text-kanbas-blue font-bold hover:underline text-lg">Cancelar</button>
+                  <button type="button" onClick={() => handleStepTransition(2)} className="bg-kanbas-blue text-white font-bold py-3 px-8 rounded-full hover:bg-blue-600 transition duration-300 shadow-md">Siguiente &gt;</button>
                 </div>
               </form>
             </div>
@@ -232,21 +258,21 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
                 <div>
                   <label className="block text-black text-lg font-bold mb-2">Usuario / Email</label>
                   <div className="flex items-center space-x-2">
-                    <input type="text" placeholder="nombre.apellido@empresa.com" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-[#0097b2] text-gray-800 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#0097b2]" />
-                    <button onClick={() => handleAddUser(setProductOwner, emailInput, setEmailInput)} className="bg-[#0097b2] text-white rounded-full p-2 hover:bg-[#007a91] transition shadow-md">
+                    <input type="text" placeholder="nombre.apellido@empresa.com" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-kanbas-blue text-gray-800 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue" />
+                    <button onClick={() => handleAddUser(setProductOwner, emailInput, setEmailInput)} className="bg-kanbas-blue text-white rounded-full p-2 hover:bg-blue-600 transition shadow-md">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                     </button>
                   </div>
                 </div>
                 {productOwner && (
-                  <div className="flex items-center space-x-3 bg-[#cbd5e1] rounded-full px-4 py-2 w-max border border-[#0097b2]">
+                  <div className="flex items-center space-x-3 bg-[#cbd5e1] rounded-full px-4 py-2 w-max border border-kanbas-blue">
                     <span className="text-black font-medium">{productOwner.name}</span>
-                    <div className="bg-[#0097b2] rounded-full p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg></div>
+                    <div className="bg-kanbas-blue rounded-full p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg></div>
                   </div>
                 )}
                 <div className="flex items-center justify-end space-x-4 pt-12">
-                  <button type="button" onClick={() => changeStep(1)} className="text-[#0097b2] font-bold hover:underline text-lg">&lt; Anterior</button>
-                  <button type="button" onClick={() => changeStep(3)} className="bg-[#0097b2] text-white font-bold py-3 px-8 rounded-full hover:bg-[#007a91] transition duration-300 shadow-md">Siguiente &gt;</button>
+                  <button type="button" onClick={() => changeStep(1)} className="text-kanbas-blue font-bold hover:underline text-lg">&lt; Anterior</button>
+                  <button type="button" onClick={() => changeStep(3)} className="bg-kanbas-blue text-white font-bold py-3 px-8 rounded-full hover:bg-blue-600 transition duration-300 shadow-md">Siguiente &gt;</button>
                 </div>
               </div>
             </div>
@@ -260,21 +286,21 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
                 <div>
                   <label className="block text-black text-lg font-bold mb-2">Usuario / Email</label>
                   <div className="flex items-center space-x-2">
-                    <input type="text" placeholder="nombre.apellido@empresa.com" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-[#0097b2] text-gray-800 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#0097b2]" />
-                    <button onClick={() => handleAddUser(setSdm, emailInput, setEmailInput)} className="bg-[#0097b2] text-white rounded-full p-2 hover:bg-[#007a91] transition shadow-md">
+                    <input type="text" placeholder="nombre.apellido@empresa.com" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-kanbas-blue text-gray-800 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue" />
+                    <button onClick={() => handleAddUser(setSdm, emailInput, setEmailInput)} className="bg-kanbas-blue text-white rounded-full p-2 hover:bg-blue-600 transition shadow-md">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                     </button>
                   </div>
                 </div>
                 {sdm && (
-                  <div className="flex items-center space-x-3 bg-[#cbd5e1] rounded-full px-4 py-2 w-max border border-[#0097b2]">
+                  <div className="flex items-center space-x-3 bg-[#cbd5e1] rounded-full px-4 py-2 w-max border border-kanbas-blue">
                     <span className="text-black font-medium">{sdm.name}</span>
-                    <div className="bg-[#0097b2] rounded-full p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg></div>
+                    <div className="bg-kanbas-blue rounded-full p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg></div>
                   </div>
                 )}
                 <div className="flex items-center justify-end space-x-4 pt-12">
-                  <button type="button" onClick={() => changeStep(2)} className="text-[#0097b2] font-bold hover:underline text-lg">&lt; Anterior</button>
-                  <button type="button" onClick={() => changeStep(4)} className="bg-[#0097b2] text-white font-bold py-3 px-8 rounded-full hover:bg-[#007a91] transition duration-300 shadow-md">Siguiente &gt;</button>
+                  <button type="button" onClick={() => changeStep(2)} className="text-kanbas-blue font-bold hover:underline text-lg">&lt; Anterior</button>
+                  <button type="button" onClick={() => changeStep(4)} className="bg-kanbas-blue text-white font-bold py-3 px-8 rounded-full hover:bg-blue-600 transition duration-300 shadow-md">Siguiente &gt;</button>
                 </div>
               </div>
             </div>
@@ -293,7 +319,7 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
                       {/* Hover Actions */}
                       <div className="absolute right-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         {/* Edit (Placeholder action) */}
-                        <button className="text-gray-600 hover:text-[#0097b2]">
+                        <button className="text-gray-600 hover:text-kanbas-blue">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                           </svg>
@@ -313,8 +339,8 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
                 </div>
 
                 <div className="flex items-center justify-end space-x-4 pt-12">
-                  <button type="button" onClick={() => changeStep(3)} className="text-[#0097b2] font-bold hover:underline text-lg">&lt; Anterior</button>
-                  <button type="button" onClick={onNext} className="bg-[#0097b2] text-white font-bold py-3 px-8 rounded-full hover:bg-[#007a91] transition duration-300 shadow-md">Finalizar</button>
+                  <button type="button" onClick={() => changeStep(3)} className="text-kanbas-blue font-bold hover:underline text-lg">&lt; Anterior</button>
+                  <button type="button" onClick={onNext} className="bg-kanbas-blue text-white font-bold py-3 px-8 rounded-full hover:bg-blue-600 transition duration-300 shadow-md">Finalizar</button>
                 </div>
               </div>
             </div>
@@ -338,7 +364,7 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
                     onFocus={() => {
                       if (errors.newTeamName) setErrors({...errors, newTeamName: false});
                     }}
-                    className={`w-full px-4 py-3 rounded-full bg-[#cbd5e1] border text-gray-800 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#0097b2] ${errors.newTeamName ? 'border-red-500 ring-1 ring-red-500' : 'border-[#0097b2]'}`} 
+                    className={`w-full px-4 py-3 rounded-full bg-[#cbd5e1] border text-gray-800 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue ${errors.newTeamName ? 'border-red-500 ring-1 ring-red-500' : 'border-kanbas-blue'}`} 
                   />
                 </div>
 
@@ -346,17 +372,17 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
                   <label className="block text-black text-lg font-bold mb-2">Integrantes</label>
                   <label className="block text-black text-sm mb-1">Usuario / Email</label>
                   <div className="flex items-center space-x-2 mb-4">
-                    <input type="text" placeholder="nombre.apellido@empresa.com" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-[#0097b2] text-gray-800 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#0097b2]" />
-                    <button onClick={handleAddTeamMember} className="bg-[#0097b2] text-white rounded-full p-2 hover:bg-[#007a91] transition shadow-md">
+                    <input type="text" placeholder="nombre.apellido@empresa.com" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-kanbas-blue text-gray-800 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue" />
+                    <button onClick={handleAddTeamMember} className="bg-kanbas-blue text-white rounded-full p-2 hover:bg-blue-600 transition shadow-md">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                     </button>
                   </div>
 
                   <div className="flex flex-wrap gap-3">
                     {newTeamMembers.map((member, index) => (
-                      <div key={index} className="bg-[#cbd5e1] rounded-full px-4 py-2 flex items-center space-x-2 group border border-transparent hover:border-[#0097b2] transition relative pr-10">
+                      <div key={index} className="bg-[#cbd5e1] rounded-full px-4 py-2 flex items-center space-x-2 group border border-transparent hover:border-kanbas-blue transition relative pr-10">
                         <span className="text-black font-medium">{member.name}</span>
-                        <div className="bg-[#0097b2] rounded-full p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg></div>
+                        <div className="bg-kanbas-blue rounded-full p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg></div>
                         
                         {/* Trash Icon on Hover */}
                         <button 
@@ -373,8 +399,8 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
                 </div>
 
                 <div className="flex items-center justify-end space-x-4 pt-8">
-                  <button type="button" onClick={() => changeStep(4)} className="text-[#0097b2] font-bold hover:underline text-lg">Cancelar</button>
-                  <button type="button" onClick={handleCreateTeam} className="bg-[#0097b2] text-white font-bold py-3 px-8 rounded-full hover:bg-[#007a91] transition duration-300 shadow-md">Aceptar</button>
+                  <button type="button" onClick={() => changeStep(4)} className="text-kanbas-blue font-bold hover:underline text-lg">Cancelar</button>
+                  <button type="button" onClick={handleCreateTeam} className="bg-kanbas-blue text-white font-bold py-3 px-8 rounded-full hover:bg-blue-600 transition duration-300 shadow-md">Aceptar</button>
                 </div>
               </div>
             </div>

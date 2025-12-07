@@ -30,10 +30,10 @@ const BoardPage = ({ project, onBack }) => {
   return (
     <MainLayout isBoardView={true} projectName={project?.name || "Proyecto Ejemplo"} onLogoClick={onBack}>
       <div className="flex h-[calc(100vh-6rem)] overflow-x-auto gap-8 px-4 pb-4 items-stretch justify-center">
-        <BoardColumn title="To do" tasks={tasks.todo} color="#0097b2" />
-        <BoardColumn title="In progress" tasks={tasks.inProgress} color="#f87171" />
-        <BoardColumn title="Review" tasks={tasks.review} color="#fb923c" />
-        <BoardColumn title="Done" tasks={tasks.done} color="#4ade80" />
+        <BoardColumn title="To do" tasks={tasks.todo} color="#2563eb" />
+        <BoardColumn title="In progress" tasks={tasks.inProgress} color="#ef4444" />
+        <BoardColumn title="Review" tasks={tasks.review} color="#f97316" />
+        <BoardColumn title="Done" tasks={tasks.done} color="#10b981" />
       </div>
     </MainLayout>
   );

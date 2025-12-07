@@ -10,7 +10,7 @@ const ProjectCard = ({ color, name, onClick }) => {
         className="h-36 w-full" 
         style={{ backgroundColor: color }}
       ></div>
-      <div className="h-12 bg-[#0097b2] flex items-center px-4">
+      <div className="h-12 flex items-center px-4 animate-gradient-bg">
         <span className="text-white font-medium text-lg truncate">{name}</span>
       </div>
     </div>
