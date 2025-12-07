@@ -3,7 +3,7 @@ import MainLayout from '../../../layouts/MainLayout';
 import ProjectCard from '../components/ProjectCard';
 import CreateProjectModal from '../components/CreateProjectModal';
 
-const ProjectsDashboard = ({ user }) => {
+const ProjectsDashboard = ({ user, onProjectClick }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Datos de prueba para proyectos
@@ -30,11 +30,12 @@ const ProjectsDashboard = ({ user }) => {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {projects.map((project) => (
-              <ProjectCard 
-                key={project.id} 
-                name={project.name} 
-                color={project.color} 
-              />
+              <div key={project.id} onClick={() => onProjectClick && onProjectClick(project)}>
+                <ProjectCard 
+                  name={project.name} 
+                  color={project.color} 
+                />
+              </div>
             ))}
 
             {/* Botón Agregar Proyecto */}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import logoColor from '../../../assets/logo_color.png';
 
 const LoginForm = ({ onSwitchToSignup, onSubmit }) => {
   const [identifier, setIdentifier] = useState('');
@@ -16,9 +17,7 @@ const LoginForm = ({ onSwitchToSignup, onSubmit }) => {
     <div className="min-h-screen flex items-center justify-center bg-[#0097b2]">
       <div className="bg-[#f0f0f5] p-8 rounded-[2rem] shadow-lg w-full max-w-md mx-4">
         <div className="flex justify-center mb-8">
-          <h1 className="text-6xl font-bold text-[#0097b2] drop-shadow-[4px_4px_0px_rgba(92,92,138,0.5)] tracking-wide font-sans">
-            kanbas
-          </h1>
+          <img src={logoColor} alt="Kanbas Logo" className="h-20 w-auto" />
         </div>
 
         <form className="space-y-6" onSubmit={handleSubmit}>

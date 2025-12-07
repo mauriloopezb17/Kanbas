@@ -3,10 +3,12 @@ import React, { useState } from 'react';
 import LoginForm from './features/auth/components/LoginForm';
 import SignupForm from './features/auth/components/SignupForm';
 import ProjectsDashboard from './features/projects/pages/ProjectsDashboard';
+import BoardPage from './features/board/pages/BoardPage';
 import { login } from './features/auth/services/authService';
 
 function App() {
   const [user, setUser] = useState(null);
+  const [currentProject, setCurrentProject] = useState(null);
   const [isLoginView, setIsLoginView] = useState(true);
 
   const handleLogin = async (credentials) => {
@@ -20,9 +22,23 @@ function App() {
     }
   };
 
-  // Si el usuario está logueado, mostrar el dashboard
+  // Si el usuario está logueado
   if (user) {
-    return <ProjectsDashboard user={user} />;
+    if (currentProject) {
+      return (
+        <div className="animate-fade-in">
+          <BoardPage 
+            project={currentProject} 
+            onBack={() => setCurrentProject(null)} 
+          />
+        </div>
+      );
+    }
+    return (
+      <div className="animate-fade-in">
+        <ProjectsDashboard user={user} onProjectClick={setCurrentProject} />
+      </div>
+    );
   }
 
   return (
