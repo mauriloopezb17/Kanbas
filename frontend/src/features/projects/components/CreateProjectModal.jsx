@@ -3,7 +3,7 @@ import React from 'react';
 const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
   const [step, setStep] = React.useState(1);
   
-  // Data States
+  // datos del proyecto
   const [productOwner, setProductOwner] = React.useState(null);
   const [sdm, setSdm] = React.useState(null);
   const [teams, setTeams] = React.useState([
@@ -12,7 +12,7 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
     { id: 3, name: 'Equipo Marketing', members: [] },
   ]);
 
-  // Input States
+  // lo que escribe el usuario
   const [projectName, setProjectName] = React.useState('');
   const [projectDescription, setProjectDescription] = React.useState('');
   const [deadline, setDeadline] = React.useState('');
@@ -20,10 +20,10 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
   const [newTeamName, setNewTeamName] = React.useState('');
   const [newTeamMembers, setNewTeamMembers] = React.useState([]);
   
-  // Validation State
+  // errores y validaciones
   const [errors, setErrors] = React.useState({});
 
-  // Animation states
+  // cosas de la animacion
   const [isExiting, setIsExiting] = React.useState(false);
   const [containerHeight, setContainerHeight] = React.useState(null);
   const [hasAnimated, setHasAnimated] = React.useState(false);
@@ -31,7 +31,7 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
   const contentRef = React.useRef(null);
   const dateInputRef = React.useRef(null);
 
-  // Reset to step 1 when opening
+  // reiniciar todo cuando se abre
   React.useEffect(() => {
     if (isOpen) {
       setStep(1);
@@ -67,7 +67,7 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
       }
     }
 
-    if (currentStep === 5) { // Create Team Step
+    if (currentStep === 5) { // paso de crear equipo
       if (!newTeamName.trim()) {
         newErrors.newTeamName = true;
         isValid = false;
@@ -79,7 +79,7 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
   };
 
   const handleStepTransition = (nextStep) => {
-    // Only validate when moving forward from step 1
+    // solo validar si vamos pa delante
     if (step === 1 && nextStep > 1) {
       if (validateStep(1)) {
         changeStep(nextStep);
@@ -89,7 +89,7 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
     }
   };
 
-  // Generic User Adder (simulated)
+  // agregar usuario de mentira
   const handleAddUser = (targetSetter, currentInput, inputSetter) => {
     if (currentInput) {
       const mockUser = { name: 'Usuario Simulado', email: currentInput };
@@ -173,7 +173,7 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
       >
         <div className="p-8" ref={contentRef}>
           
-          {/* STEP 1: Project Details */}
+          {/* PASO 1: datos del proyecto */}
           {step === 1 && (
             <div className={`${isExiting ? 'animate-fade-out' : 'animate-[fade-in_0.3s_ease-out_0.3s_both]'}`}>
               <h2 className="text-3xl font-bold text-black mb-6 font-sans">Crear Proyecto</h2>
@@ -213,7 +213,7 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
                 <div>
                   <label className="block text-black text-lg font-bold mb-2">Fecha Limite</label>
                   <div className="relative w-48">
-                    {/* Visible Formatted Input */}
+                    {/* input de fecha bonito */}
                     <input 
                       type="text" 
                       placeholder="DD/MM/AAAA"
@@ -223,7 +223,7 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
                       className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-kanbas-blue text-gray-800 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue cursor-pointer" 
                     />
                     
-                    {/* Hidden Native Date Input */}
+                    {/* input de fecha real pero escondido */}
                     <input 
                       ref={dateInputRef}
                       type="date" 
@@ -233,7 +233,7 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
                       tabIndex={-1}
                     />
 
-                    {/* Custom Icon Trigger */}
+                    {/* icono para abrir el calendario */}
                     <div 
                       onClick={() => dateInputRef.current?.showPicker()}
                       className="absolute right-4 top-1/2 transform -translate-y-1/2 text-kanbas-blue cursor-pointer hover:text-blue-600 transition"
@@ -250,7 +250,7 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
             </div>
           )}
 
-          {/* STEP 2: Assign Product Owner */}
+          {/* PASO 2: asignar al dueño */}
           {step === 2 && (
             <div className={`${isExiting ? 'animate-fade-out' : 'animate-[fade-in_0.3s_ease-out_0.3s_both]'}`}>
               <h2 className="text-3xl font-bold text-black mb-6 font-sans">Asignar Product Owner</h2>
@@ -278,7 +278,7 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
             </div>
           )}
 
-          {/* STEP 3: Assign SDM */}
+          {/* PASO 3: asignar al sdm */}
           {step === 3 && (
             <div className={`${isExiting ? 'animate-fade-out' : 'animate-[fade-in_0.3s_ease-out_0.3s_both]'}`}>
               <h2 className="text-3xl font-bold text-black mb-6 font-sans">Asignar SDM</h2>
@@ -306,7 +306,7 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
             </div>
           )}
 
-          {/* STEP 4: Assign Teams */}
+          {/* PASO 4: asignar equipos */}
           {step === 4 && (
             <div className={`${isExiting ? 'animate-fade-out' : 'animate-[fade-in_0.3s_ease-out_0.3s_both]'}`}>
               <h2 className="text-3xl font-bold text-black mb-6 font-sans">Agregar Equipos</h2>
@@ -316,15 +316,15 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
                     <div key={team.id} className="bg-[#cbd5e1] rounded-full px-4 py-2 flex items-center space-x-2 group cursor-pointer hover:bg-[#b0c4de] transition relative pr-16">
                       <span className="text-black font-medium">{team.name}</span>
                       
-                      {/* Hover Actions */}
+                      {/* acciones al pasar el mouse */}
                       <div className="absolute right-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {/* Edit (Placeholder action) */}
+                        {/* editar (no hace nada todavia) */}
                         <button className="text-gray-600 hover:text-kanbas-blue">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                           </svg>
                         </button>
-                        {/* Delete */}
+                        {/* borrar */}
                         <button onClick={(e) => { e.stopPropagation(); handleRemoveTeam(team.id); }} className="text-gray-600 hover:text-red-500">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -346,7 +346,7 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
             </div>
           )}
 
-          {/* STEP 5: Create Team */}
+          {/* PASO 5: crear nuevo equipo */}
           {step === 5 && (
             <div className={`${isExiting ? 'animate-fade-out' : 'animate-[fade-in_0.3s_ease-out_0.3s_both]'}`}>
               <h2 className="text-3xl font-bold text-black mb-6 font-sans">Crear Equipo</h2>
