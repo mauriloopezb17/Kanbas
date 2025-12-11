@@ -3,14 +3,14 @@ import IntegranteService from "../services/IntegranteService.js";
 class IntegranteController {
   async agregarIntegrante(req, res) {
     try {
-      const { idProyecto, idEquipo, idUsuarioAgregar } = req.body;
+      const { idProyecto, idEquipo, emailOrUsername } = req.body;
 
       const idUsuarioSolicitante = req.user.idUsuario;
 
       const data = await IntegranteService.agregarIntegrante({
         idProyecto,
         idEquipo,
-        idUsuarioAgregar,
+        emailOrUsername,
         idUsuarioSolicitante,
       });
 

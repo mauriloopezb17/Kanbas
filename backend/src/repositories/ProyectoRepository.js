@@ -27,6 +27,15 @@ class ProyectoRepository {
     );
   }
 
+  async obtenerProyectoPorId(idProyecto) {
+    const result = await pool.query(
+      `SELECT * FROM proyectos WHERE idproyecto = $1`,
+      [idProyecto]
+    );
+
+    return result.rows.length ? new Proyecto(result.rows[0]) : null;
+  }
+
   async findById(idProyecto) {
     const result = await pool.query(
       `SELECT * FROM proyectos WHERE idproyecto = $1`,
@@ -34,6 +43,22 @@ class ProyectoRepository {
     );
 
     return result.rows.length ? new Proyecto(result.rows[0]) : null;
+  }
+
+  async getProjectsOfUser(idUsuario) {
+    const result = await pool.query(
+      `
+    SELECT DISTINCT p.*
+    FROM proyectos p
+    LEFT JOIN equipos e ON e.idproyecto = p.idproyecto
+    LEFT JOIN integrantes i ON i.idequipo = e.idequipo
+    WHERE p.idusuario_srm = $1 OR p.idusuario_po = $1 OR p.idusuario_sdm = $1 OR i.idusuario = $1
+    ORDER BY p.idproyecto;
+    `,
+      [idUsuario]
+    );
+
+    return result.rows.map((row) => new Proyecto(row));
   }
 }
 

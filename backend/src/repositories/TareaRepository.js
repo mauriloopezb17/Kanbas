@@ -4,9 +4,10 @@ import Tarea from "../models/Tarea.js";
 class TareaRepository {
   async createTarea(tarea) {
     const result = await pool.query(
-      `INSERT INTO tareas(idproyecto, idequipo, titulo, descripcion, prioridad, fechacreacion, fechalimite)
-             VALUES ($1, $2, $3, $4, $5, NOW(), $6)
-             RETURNING *`,
+      `INSERT INTO tareas
+        (idproyecto, idequipo, titulo, descripcion, prioridad, fechacreacion, fechalimite, estado)
+       VALUES ($1, $2, $3, $4, $5, NOW(), $6, 'TODO')
+       RETURNING *`,
       [
         tarea.idProyecto,
         tarea.idEquipo,
@@ -20,10 +21,28 @@ class TareaRepository {
     return new Tarea(result.rows[0]);
   }
 
+  async findById(idTarea) {
+    const result = await pool.query(`SELECT * FROM tareas WHERE idtarea = $1`, [
+      idTarea,
+    ]);
+
+    if (result.rowCount === 0) return null;
+    return new Tarea(result.rows[0]);
+  }
+
+  async findByProyecto(idProyecto) {
+    const result = await pool.query(
+      `SELECT * FROM tareas WHERE idproyecto = $1`,
+      [idProyecto]
+    );
+
+    return result.rows.map((row) => new Tarea(row));
+  }
+
   async assignIntegrante(idTarea, idIntegrante) {
     await pool.query(
       `INSERT INTO asignacion(idintegrante, idtarea)
-             VALUES ($1, $2)`,
+       VALUES ($1, $2)`,
       [idIntegrante, idTarea]
     );
   }
@@ -31,7 +50,8 @@ class TareaRepository {
   async updateEstado(idTarea, nuevoEstado) {
     const result = await pool.query(
       `UPDATE tareas SET estado = $1
-             WHERE idtarea = $2 RETURNING *`,
+       WHERE idtarea = $2
+       RETURNING *`,
       [nuevoEstado, idTarea]
     );
 
@@ -41,9 +61,12 @@ class TareaRepository {
   async updateTarea(tarea) {
     const result = await pool.query(
       `UPDATE tareas
-             SET titulo = $1, descripcion = $2, prioridad = $3, fechalimite = $4
-             WHERE idtarea = $5
-             RETURNING *`,
+       SET titulo = $1,
+           descripcion = $2,
+           prioridad = $3,
+           fechalimite = $4
+       WHERE idtarea = $5
+       RETURNING *`,
       [
         tarea.titulo,
         tarea.descripcion,
@@ -61,13 +84,12 @@ class TareaRepository {
   }
 
   async getTareasDeUsuario(idUsuario) {
-    // Usuario a Integrante a Asignación a Tarea
     const result = await pool.query(
       `SELECT t.*
-             FROM integrantes i
-             JOIN asignacion a ON a.idintegrante = i.idintegrante
-             JOIN tareas t ON t.idtarea = a.idtarea
-             WHERE i.idusuario = $1`,
+       FROM integrantes i
+       JOIN asignacion a ON a.idintegrante = i.idintegrante
+       JOIN tareas t ON t.idtarea = a.idtarea
+       WHERE i.idusuario = $1`,
       [idUsuario]
     );
 
@@ -77,10 +99,10 @@ class TareaRepository {
   async getUsuariosAsignados(idTarea) {
     const result = await pool.query(
       `SELECT u.*
-             FROM asignacion a
-             JOIN integrantes i ON i.idintegrante = a.idintegrante
-             JOIN usuarios u ON u.idusuario = i.idusuario
-             WHERE a.idtarea = $1`,
+       FROM asignacion a
+       JOIN integrantes i ON i.idintegrante = a.idintegrante
+       JOIN usuarios u ON u.idusuario = i.idusuario
+       WHERE a.idtarea = $1`,
       [idTarea]
     );
 

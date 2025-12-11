@@ -7,7 +7,7 @@ class IntegranteService {
   async agregarIntegrante({
     idProyecto,
     idEquipo,
-    idUsuarioAgregar,
+    emailOrUsername,
     idUsuarioSolicitante,
   }) {
     const rolSolicitante = await UsuarioRepository.getUserRoleInProject(
@@ -26,12 +26,16 @@ class IntegranteService {
       throw new Error("El equipo no existe dentro del proyecto.");
     }
 
-    const usuarioAgregar = await UsuarioRepository.findById(idUsuarioAgregar);
+    const usuarioAgregar = await UsuarioRepository.findByIdentifier(
+      emailOrUsername
+    );
+
     if (!usuarioAgregar) {
       throw new Error("El usuario que intentas añadir no existe.");
     }
 
-    // Verifica si el Usuario ya está en el equipo
+    const idUsuarioAgregar = usuarioAgregar.idUsuario;
+
     const integrantes = await IntegrantesRepository.getIntegrantes(idEquipo);
     const yaEsta = integrantes.find((i) => i.idusuario === idUsuarioAgregar);
 

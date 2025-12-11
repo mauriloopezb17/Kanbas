@@ -45,4 +45,11 @@ router.post(
   EquipoController.obtenerIntegrantes
 );
 
+router.get(
+  "/proyecto/:idProyecto",
+  authMiddleware,
+  projectMiddleware,
+  EquipoController.getEquiposByProyecto
+);
+
 export default router;

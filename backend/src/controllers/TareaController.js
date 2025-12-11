@@ -129,18 +129,6 @@ class TareaController {
     }
   }
 
-  async añadirIntegrante(req, res) {
-    try {
-      const { idTarea, idIntegrante } = req.body;
-
-      const data = await TareaService.añadirIntegrante(idTarea, idIntegrante);
-
-      return res.status(201).json(data);
-    } catch (error) {
-      return res.status(400).json({ error: error.message });
-    }
-  }
-
   async eliminarTarea(req, res) {
     try {
       const { idTarea, idProyecto } = req.params;

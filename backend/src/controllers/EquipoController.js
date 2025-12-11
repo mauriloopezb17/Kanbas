@@ -1,4 +1,5 @@
 import EquipoService from "../services/EquipoService.js";
+import EquipoRepository from "../repositories/EquipoRepository.js";
 
 class EquipoController {
   async crearEquipo(req, res) {
@@ -84,6 +85,18 @@ class EquipoController {
       );
 
       return res.status(200).json(integrantes);
+    } catch (error) {
+      return res.status(400).json({ error: error.message });
+    }
+  }
+
+  async getEquiposByProyecto(req, res) {
+    try {
+      const { idProyecto } = req.params;
+
+      const equipos = await EquipoRepository.getEquiposByProyecto(idProyecto);
+
+      return res.status(200).json(equipos);
     } catch (error) {
       return res.status(400).json({ error: error.message });
     }

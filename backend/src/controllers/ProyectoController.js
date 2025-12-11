@@ -19,6 +19,24 @@ class ProyectoController {
     }
   }
 
+  async asignarPO(req, res) {
+    try {
+      const { idProyecto } = req.params;
+      const { emailOrUsername } = req.body;
+      const idUsuarioSolicitante = req.user.idUsuario;
+
+      const resultado = await ProyectoService.asignarPO({
+        idProyecto,
+        emailOrUsername,
+        idUsuarioSolicitante,
+      });
+
+      return res.status(200).json(resultado);
+    } catch (error) {
+      return res.status(400).json({ error: error.message });
+    }
+  }
+
   async obtenerProyecto(req, res) {
     try {
       const { idProyecto } = req.params;
@@ -33,7 +51,7 @@ class ProyectoController {
 
   async obtenerProyectosDeUsuario(req, res) {
     try {
-      const { idUsuario } = req.params;
+      const idUsuario = req.user.idUsuario;
 
       const proyectos = await ProyectoService.obtenerProyectosDeUsuario(
         idUsuario
@@ -45,35 +63,19 @@ class ProyectoController {
     }
   }
 
-  async asignarPO(req, res) {
-    try {
-      const { idProyecto, idUsuarioPO } = req.body;
-      const idUsuarioSolicitante = req.user.idUsuario;
-
-      const response = await ProyectoService.asignarPO(
-        idProyecto,
-        idUsuarioPO,
-        idUsuarioSolicitante
-      );
-
-      return res.status(200).json(response);
-    } catch (error) {
-      return res.status(400).json({ error: error.message });
-    }
-  }
-
   async asignarSDM(req, res) {
     try {
-      const { idProyecto, idUsuarioSDM } = req.body;
+      const { idProyecto } = req.params;
+      const { emailOrUsername } = req.body;
       const idUsuarioSolicitante = req.user.idUsuario;
 
-      const response = await ProyectoService.asignarSDM(
+      const resultado = await ProyectoService.asignarSDM({
         idProyecto,
-        idUsuarioSDM,
-        idUsuarioSolicitante
-      );
+        emailOrUsername,
+        idUsuarioSolicitante,
+      });
 
-      return res.status(200).json(response);
+      return res.status(200).json(resultado);
     } catch (error) {
       return res.status(400).json({ error: error.message });
     }

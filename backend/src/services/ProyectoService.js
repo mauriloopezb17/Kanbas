@@ -37,7 +37,7 @@ class ProyectoService {
     return await UsuarioRepository.getProjectsOfUser(idUsuario);
   }
 
-  async asignarPO(idProyecto, idUsuarioPO, idUsuarioSolicitante) {
+  async asignarPO({ idProyecto, emailOrUsername, idUsuarioSolicitante }) {
     const rolSolicitante = await UsuarioRepository.getUserRoleInProject(
       idUsuarioSolicitante,
       idProyecto
@@ -50,8 +50,10 @@ class ProyectoService {
     const proyecto = await ProyectoRepository.findById(idProyecto);
     if (!proyecto) throw new Error("El proyecto no existe.");
 
-    const usuario = await UsuarioRepository.findById(idUsuarioPO);
+    const usuario = await UsuarioRepository.findByIdentifier(emailOrUsername);
     if (!usuario) throw new Error("El usuario no existe.");
+
+    const idUsuarioPO = usuario.idUsuario;
 
     await ProyectoRepository.assignPO(idProyecto, idUsuarioPO);
 
@@ -62,26 +64,28 @@ class ProyectoService {
     };
   }
 
-  async asignarSDM(idProyecto, idUsuarioSDM, idUsuarioSolicitante) {
+  async asignarSDM({ idProyecto, emailOrUsername, idUsuarioSolicitante }) {
     const rolSolicitante = await UsuarioRepository.getUserRoleInProject(
       idUsuarioSolicitante,
       idProyecto
     );
 
     if (rolSolicitante !== "SRM") {
-      throw new Error("Solo el SRM puede asignar Service Delivery Manager.");
+      throw new Error("Solo el SRM puede asignar SDM.");
     }
 
     const proyecto = await ProyectoRepository.findById(idProyecto);
     if (!proyecto) throw new Error("El proyecto no existe.");
 
-    const usuario = await UsuarioRepository.findById(idUsuarioSDM);
+    const usuario = await UsuarioRepository.findByIdentifier(emailOrUsername);
     if (!usuario) throw new Error("El usuario no existe.");
+
+    const idUsuarioSDM = usuario.idUsuario;
 
     await ProyectoRepository.assignSDM(idProyecto, idUsuarioSDM);
 
     return {
-      mensaje: "Service Delivery Manager asignado correctamente.",
+      mensaje: "SDM asignado correctamente.",
       idProyecto,
       idUsuarioSDM,
     };

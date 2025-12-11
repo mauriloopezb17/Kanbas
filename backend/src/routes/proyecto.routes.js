@@ -16,25 +16,7 @@ router.get(
   ProyectoController.obtenerProyecto
 );
 
-router.get(
-  "/usuario/:idUsuario",
-  authMiddleware,
-  ProyectoController.obtenerProyectosDeUsuario
-);
-
-router.post(
-  "/asignar-po",
-  authMiddleware,
-  roleMiddleware(["SRM"]),
-  ProyectoController.asignarPO
-);
-
-router.post(
-  "/asignar-sdm",
-  authMiddleware,
-  roleMiddleware(["SRM"]),
-  ProyectoController.asignarSDM
-);
+router.get("/", authMiddleware, ProyectoController.obtenerProyectosDeUsuario);
 
 router.get(
   "/rol/:idUsuario/:idProyecto",
@@ -70,6 +52,21 @@ router.get(
   authMiddleware,
   projectMiddleware,
   ProyectoController.obtenerDashboard
+);
+
+router.put(
+  "/:idProyecto/product-owner",
+  authMiddleware,
+  roleMiddleware(["SRM"]),
+  ProyectoController.asignarPO
+);
+
+router.put(
+  "/:idProyecto/sdm",
+  authMiddleware,
+  projectMiddleware,
+  roleMiddleware(["SRM"]),
+  ProyectoController.asignarSDM
 );
 
 export default router;

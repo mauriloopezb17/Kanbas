@@ -69,3 +69,69 @@ Content-Type: application/json
     "email": "nachpro@gmail.com",
     "password": "admin"
 }
+
+### Crear Usuario 7
+POST http://100.95.161.42:3000/api/auth/register
+Content-Type: application/json
+
+{
+    "usuario": "Mekosboy",
+    "nombre": "Jose",
+    "apellido": "Rodriguez",
+    "email": "joserodriguez@gmail.com",
+    "password": "admin"
+}
+
+### Crear proyecto
+POST http://100.95.161.42:3000/api/proyectos/crear
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "nombreProyecto": "Prueba proyecto A22222",
+    "descripcion": "Este es un proyecto de falla xd"
+}
+
+### Asignar Product Owner
+PUT http://100.95.161.42:3000/api/proyectos/2/product-owner
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "emailOrUsername": "sergio.trigo@gmail.com"
+}
+
+### Asignar SDM
+PUT http://100.95.161.42:3000/api/proyectos/1/sdm
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "emailOrUsername": "sergio.trigo@gmail.com"
+}
+
+### Crear equipo
+POST http://100.95.161.42:3000/api/equipos/crear
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombreEquipo": "alfabuenamaravillaondadinamitaescuadrónlobo",
+  "idProyecto": 1
+}
+
+### Añadir integrante al equipo
+POST http://localhost:3000/api/integrantes/agregar
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "idEquipo": 1,
+  "idProyecto": 1,
+  "emailOrUsername": "joserodriguez@gmail.com"
+}
+
+### Obtener proyectos del usuario logueado
+GET http://100.95.161.42:3000/api/proyectos
+Authorization: Bearer {{token}}
+

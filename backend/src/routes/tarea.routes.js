@@ -51,7 +51,7 @@ router.put(
   TareaController.cambiarEstado
 );
 
-router.post(
+router.get(
   "/asignados/:idTarea/:idProyecto",
   authMiddleware,
   projectMiddleware,
@@ -66,7 +66,7 @@ router.delete(
   TareaController.eliminarTarea
 );
 
-router.post(
+router.get(
   "/comentarios/:idTarea/:idProyecto",
   authMiddleware,
   projectMiddleware,

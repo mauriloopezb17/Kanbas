@@ -12,6 +12,7 @@ class TareaService {
     descripcion,
     prioridad,
     fechaLimite,
+    integrantes = [],
     idUsuarioSolicitante,
   }) {
     const rol = await UsuarioRepository.getUserRoleInProject(
@@ -19,9 +20,7 @@ class TareaService {
       idProyecto
     );
 
-    if (!rol) {
-      throw new Error("No perteneces al proyecto.");
-    }
+    if (!rol) throw new Error("No perteneces al proyecto.");
 
     if (!["SRM", "SDM", "Product Owner", "PO"].includes(rol)) {
       throw new Error("No tienes permisos para crear tareas.");
@@ -47,9 +46,32 @@ class TareaService {
       fechaLimite,
     });
 
+    if (integrantes.length > 0) {
+      const integrantesEquipo = await IntegrantesRepository.getIntegrantes(
+        idEquipo
+      );
+
+      for (const idIntegrante of integrantes) {
+        const existe = integrantesEquipo.find(
+          (i) => i.idintegrante === idIntegrante
+        );
+
+        if (!existe) {
+          throw new Error(
+            `El integrante ${idIntegrante} no pertenece a este equipo.`
+          );
+        }
+
+        await TareaRepository.assignIntegrante(tarea.idTarea, idIntegrante);
+      }
+    }
+
+    const asignados = await TareaRepository.getUsuariosAsignados(tarea.idTarea);
+
     return {
       mensaje: "Tarea creada correctamente.",
       tarea,
+      asignados,
     };
   }
 
@@ -76,12 +98,12 @@ class TareaService {
     );
     if (!integranteObj) throw new Error("El integrante no existe.");
 
-    if (integranteObj.idEquipo !== tarea.idEquipo) {
+    if (integranteObj.idequipo !== tarea.idEquipo) {
       throw new Error("Este integrante pertenece a otro equipo.");
     }
 
     const asignados = await TareaRepository.getUsuariosAsignados(idTarea);
-    if (asignados.some((u) => u.idusuario === integranteObj.idUsuario)) {
+    if (asignados.some((u) => u.idusuario === integranteObj.idusuario)) {
       throw new Error("Este integrante ya está asignado.");
     }
 
@@ -95,16 +117,14 @@ class TareaService {
   }
 
   async obtenerTareasDelProyecto(idProyecto) {
-    const equipos = await EquipoRepository.getEquiposByProyecto(idProyecto);
+    const tareas = await TareaRepository.findByProyecto(idProyecto);
 
-    let tareas = [];
-
-    for (const eq of equipos) {
-      const tareasEquipo = await TareaRepository.findByProyecto(idProyecto);
-      tareas.push(...tareasEquipo);
-    }
-
-    return tareas;
+    return {
+      todo: tareas.filter((t) => t.estado === "TODO"),
+      inProgress: tareas.filter((t) => t.estado === "IN_PROGRESS"),
+      review: tareas.filter((t) => t.estado === "REVIEW"),
+      done: tareas.filter((t) => t.estado === "DONE"),
+    };
   }
 
   async editarTarea(idTarea, idProyecto, datos, idUsuarioSolicitante) {
@@ -117,12 +137,15 @@ class TareaService {
       throw new Error("No tienes permisos para editar tareas.");
     }
 
-    const tarea = await TareaRepository.findById(idTarea);
-    if (!tarea) throw new Error("La tarea no existe.");
+    const tareaActual = await TareaRepository.findById(idTarea);
+    if (!tareaActual) throw new Error("La tarea no existe.");
 
     const tareaEditada = await TareaRepository.updateTarea({
       idTarea,
-      ...datos,
+      titulo: datos.titulo ?? tareaActual.titulo,
+      descripcion: datos.descripcion ?? tareaActual.descripcion,
+      prioridad: datos.prioridad ?? tareaActual.prioridad,
+      fechaLimite: datos.fechaLimite ?? tareaActual.fechaLimite,
     });
 
     return {
@@ -138,6 +161,11 @@ class TareaService {
     );
 
     if (!rol) throw new Error("No perteneces al proyecto.");
+
+    const estadosPermitidos = ["TODO", "IN_PROGRESS", "REVIEW", "DONE"];
+    if (!estadosPermitidos.includes(nuevoEstado)) {
+      throw new Error("Estado inválido.");
+    }
 
     const tarea = await TareaRepository.updateEstado(idTarea, nuevoEstado);
 
@@ -156,10 +184,6 @@ class TareaService {
     if (!rol) throw new Error("No perteneces al proyecto.");
 
     return await TareaRepository.getUsuariosAsignados(idTarea);
-  }
-
-  async añadirIntegrante(idTarea, idIntegrante) {
-    return await TareaRepository.assignIntegrante(idTarea, idIntegrante);
   }
 
   async eliminarTarea(idTarea, idProyecto, idUsuarioSolicitante) {

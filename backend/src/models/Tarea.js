@@ -1,30 +1,27 @@
 export default class Tarea {
-  constructor({
-    idTarea,
-    titulo,
-    descripcion,
-    prioridad,
-    fechaCreacion,
-    fechaLimite,
-    estado,
-    responsable = null,
-    comentarios = [],
-  }) {
-    this.idTarea = idTarea;
-    this.titulo = titulo;
-    this.descripcion = descripcion;
-    this.prioridad = prioridad;
-    this.fechaCreacion = fechaCreacion;
-    this.fechaLimite = fechaLimite;
-    this.estado = estado;
-    this.responsable = responsable;
-    this.comentarios = comentarios;
+  constructor(row) {
+    this.idTarea = row.idTarea !== undefined ? row.idTarea : row.idtarea;
+
+    this.titulo = row.titulo;
+    this.descripcion = row.descripcion;
+    this.prioridad = row.prioridad;
+
+    this.fechaCreacion =
+      row.fechaCreacion !== undefined ? row.fechaCreacion : row.fechacreacion;
+
+    this.fechaLimite =
+      row.fechaLimite !== undefined ? row.fechaLimite : row.fechalimite;
+
+    this.estado = row.estado;
+
+    this.responsable = row.responsable || null;
+    this.comentarios = row.comentarios || [];
   }
 
   modificarDatos({ titulo, descripcion, prioridad, fechaLimite }) {
-    if (titulo) this.titulo = titulo;
-    if (descripcion) this.descripcion = descripcion;
-    if (prioridad) this.prioridad = prioridad;
-    if (fechaLimite) this.fechaLimite = fechaLimite;
+    if (titulo !== undefined) this.titulo = titulo;
+    if (descripcion !== undefined) this.descripcion = descripcion;
+    if (prioridad !== undefined) this.prioridad = prioridad;
+    if (fechaLimite !== undefined) this.fechaLimite = fechaLimite;
   }
 }
