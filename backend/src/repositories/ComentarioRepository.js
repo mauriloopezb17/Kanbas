@@ -1,4 +1,4 @@
-import pool from "../config/database.js";
+import { pool } from "../config/database.js";
 import Comentario from "../models/Comentario.js";
 
 class ComentarioRepository {

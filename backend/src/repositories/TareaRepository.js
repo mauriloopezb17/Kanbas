@@ -1,5 +1,5 @@
-import pool from "../config/database.js";
-import Tarea from "../structures/Tarea.js";
+import { pool } from "../config/database.js";
+import Tarea from "../models/Tarea.js";
 
 class TareaRepository {
   async createTarea(tarea) {

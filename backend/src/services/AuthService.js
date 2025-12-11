@@ -1,5 +1,6 @@
 import UsuarioRepository from "../repositories/UsuarioRepository.js";
 import ProyectoRepository from "../repositories/ProyectoRepository.js";
+import jwt from "jsonwebtoken";
 
 class AuthService {
   async login(identifier, password) {
@@ -15,9 +16,21 @@ class AuthService {
 
     const proyectos = await UsuarioRepository.getProjectsOfUser(user.idUsuario);
 
+    const payload = {
+      idUsuario: user.idUsuario,
+      email: user.email,
+      nombre: user.nombre,
+      apellido: user.apellido,
+    };
+
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN || "8h",
+    });
+
     return {
       usuario: user,
-      proyectos: proyectos,
+      proyectos,
+      token,
     };
   }
 

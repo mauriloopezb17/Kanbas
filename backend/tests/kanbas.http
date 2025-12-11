@@ -1,0 +1,23 @@
+### Login
+# @name login
+POST http://100.95.161.42:3000/api/auth/login
+Content-Type: application/json
+
+{
+    "identifier": "cobine",
+    "password": "admin"
+}
+
+### token
+@token = {{login.response.body.token}}
+
+### Crear proyecto
+POST http://100.95.161.42:3000/api/proyectos/crear
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "nombreProyecto": "Prueba proyecto Rivera",
+    "descripcion": "Este es un proyecto de prueba",
+    "fechaFin": "2025-12-31"
+}

@@ -1,5 +1,5 @@
-import pool from "../config/database.js";
-import Equipo from "../structures/Equipo.js";
+import { pool } from "../config/database.js";
+import Equipo from "../models/Equipo.js";
 
 class EquipoRepository {
   async createEquipo(idProyecto, nombreEquipo) {

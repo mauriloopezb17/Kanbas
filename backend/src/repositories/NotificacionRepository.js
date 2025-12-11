@@ -1,5 +1,5 @@
-import pool from "../config/database.js";
-import Notificacion from "../structures/Notificacion.js";
+import { pool } from "../config/database.js";
+import Notificacion from "../models/Notificacion.js";
 
 class NotificacionRepository {
   async createNotificacion({ titulo, contenido, idUsuarioEmisor }) {

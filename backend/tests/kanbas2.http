@@ -1,0 +1,71 @@
+### Crear Usuario
+POST http://100.95.161.42:3000/api/auth/register
+Content-Type: application/json
+
+{
+    "usuario": "cobine",
+    "nombre": "Mauricio",
+    "apellido": "Lopez",
+    "email": "mauriloopezb17@gmail.com",
+    "password": "admin"
+}
+
+### Crear Usuario 2
+POST http://100.95.161.42:3000/api/auth/register
+Content-Type: application/json
+
+{
+    "usuario": "alepro",
+    "nombre": "Alejandro",
+    "apellido": "Paz",
+    "email": "alepaz@gmail.com",
+    "password": "admin"
+}
+
+### Crear Usuario 3
+POST http://100.95.161.42:3000/api/auth/register
+Content-Type: application/json
+
+{
+    "usuario": "SergioA2",
+    "nombre": "Sergio",
+    "apellido": "Trigo",
+    "email": "sergio.trigo@gmail.com",
+    "password": "admin"
+}
+
+### Crear Usuario 4
+POST http://100.95.161.42:3000/api/auth/register
+Content-Type: application/json
+
+{
+    "usuario": "Puppett",
+    "nombre": "Joseph",
+    "apellido": "Cortez",
+    "email": "puppett@gmail.com",
+    "password": "admin"
+}
+
+### Crear Usuario 5
+POST http://100.95.161.42:3000/api/auth/register
+Content-Type: application/json
+
+{
+    "usuario": "RexD",
+    "nombre": "Ian",
+    "apellido": "Coaquira",
+    "email": "ian.coaquira@gmail.com",
+    "password": "admin"
+}
+
+### Crear Usuario 6
+POST http://100.95.161.42:3000/api/auth/register
+Content-Type: application/json
+
+{
+    "usuario": "Nachpro",
+    "nombre": "Ignacio",
+    "apellido": "Paredes",
+    "email": "nachpro@gmail.com",
+    "password": "admin"
+}

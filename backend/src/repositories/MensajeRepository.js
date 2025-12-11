@@ -1,4 +1,4 @@
-import pool from "../config/database.js";
+import { pool } from "../config/database.js";
 
 class MensajeRepository {
   async createMensaje(idUsuarioEmisor, contenido) {

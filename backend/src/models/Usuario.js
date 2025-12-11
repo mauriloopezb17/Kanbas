@@ -1,6 +1,6 @@
 export default class Usuario {
-  constructor({ idUsuario, nombre, apellido, usuario, email, password }) {
-    this.idUsuario = idUsuario;
+  constructor({ idusuario, nombre, apellido, usuario, email, password }) {
+    this.idUsuario = idusuario;
     this.nombre = nombre;
     this.apellido = apellido;
     this.usuario = usuario;

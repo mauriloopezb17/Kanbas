@@ -21,20 +21,9 @@ class ProyectoService {
       fechaFin: fechaFin || null,
     });
 
-    const equipoBase = await EquipoRepository.createEquipo(
-      nuevoProyecto.idProyecto,
-      "Equipo base"
-    );
-
-    await IntegrantesRepository.addIntegrante(
-      equipoBase.idEquipo,
-      idUsuarioCreador
-    );
-
     return {
       mensaje: "Proyecto creado exitosamente.",
       proyecto: nuevoProyecto,
-      equipoInicial: equipoBase,
     };
   }
 

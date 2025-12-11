@@ -1,25 +1,20 @@
 export default class Proyecto {
-  constructor({
-    idProyecto,
-    nombre,
-    descripcion,
-    fechaInicio,
-    fechaFinEstimada,
-    tareas = [],
-  }) {
-    this.idProyecto = idProyecto;
-    this.nombre = nombre;
-    this.descripcion = descripcion;
-    this.fechaInicio = fechaInicio;
-    this.fechaFinEstimada = fechaFinEstimada;
-    this.tareas = tareas;
+  constructor(row) {
+    this.idProyecto = row.idproyecto;
+    this.nombreProyecto = row.nombreproyecto;
+    this.descripcion = row.descripcion;
+
+    this.fechaCreacion = row.fechacreacion;
+    this.fechaFin = row.fechafin;
+
+    this.tareas = [];
   }
 
-  setNombre(nombre) {
-    this.nombre = nombre;
+  setNombre(nombreProyecto) {
+    this.nombreProyecto = nombreProyecto;
   }
   getNombre() {
-    return this.nombre;
+    return this.nombreProyecto;
   }
 
   setDescripcion(descripcion) {
@@ -29,18 +24,18 @@ export default class Proyecto {
     return this.descripcion;
   }
 
-  setFechaInicio(fechaInicio) {
-    this.fechaInicio = fechaInicio;
+  setFechaInicio(fechaCreacion) {
+    this.fechaCreacion = fechaCreacion;
   }
   getFechaInicio() {
-    return this.fechaInicio;
+    return this.fechaCreacion;
   }
 
-  setFechaFinEstimada(fechaFinEstimada) {
-    this.fechaFinEstimada = fechaFinEstimada;
+  setFechaFin(fechaFin) {
+    this.fechaFin = fechaFin;
   }
-  getFechaFinEstimada() {
-    return this.fechaFinEstimada;
+  getFechaFin() {
+    return this.fechaFin;
   }
 
   addTarea(tarea) {

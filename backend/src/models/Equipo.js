@@ -1,19 +1,27 @@
 export default class Equipo {
-  constructor({ idEquipo, nombreEquipo, integrantes = [] }) {
-    this.idEquipo = idEquipo;
-    this.nombreEquipo = nombreEquipo;
-    this.integrantes = integrantes;
+  constructor(row) {
+    this.idEquipo = row.idequipo;
+    this.idProyecto = row.idproyecto;
+    this.nombreEquipo = row.nombreequipo;
+    this.integrantes = [];
   }
 
-  setNombreEquipo(nombreEquipo) {
+  setNombre(nombreEquipo) {
     this.nombreEquipo = nombreEquipo;
   }
-  getNombreEquipo() {
+  getNombre() {
     return this.nombreEquipo;
   }
 
-  setIntegrantes(integrantes) {
-    this.integrantes = integrantes;
+  setIdProyecto(idProyecto) {
+    this.idProyecto = idProyecto;
+  }
+  getIdProyecto() {
+    return this.idProyecto;
+  }
+
+  addIntegrante(integrante) {
+    this.integrantes.push(integrante);
   }
   getIntegrantes() {
     return this.integrantes;

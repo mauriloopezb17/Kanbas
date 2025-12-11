@@ -1,5 +1,5 @@
-import pool from "../config/database.js";
-import Usuario from "../structures/Usuario.js";
+import { pool } from "../config/database.js";
+import Usuario from "../models/Usuario.js";
 
 class UsuarioRepository {
   async findById(id) {

@@ -1,5 +1,5 @@
-import pool from "../config/database.js";
-import Proyecto from "../structures/Proyecto.js";
+import { pool } from "../config/database.js";
+import Proyecto from "../models/Proyecto.js";
 
 class ProyectoRepository {
   async createProyecto({ idUsuario_SRM, nombre, descripcion, fechaFin }) {
