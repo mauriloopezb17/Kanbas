@@ -8,9 +8,9 @@ const ProjectsDashboard = ({ user, onProjectClick }) => {
 
   // Datos de prueba para proyectos
   const projects = [
-    { id: 1, name: 'Ejemplo 1', color: '#e9d5ff' }, // Morado claro
-    { id: 2, name: 'Ejemplo 2', color: '#fde047' }, // Amarillo
-    { id: 3, name: 'Ejemplo 3', color: '#f87171' }, // Rojo
+    { id: 1, name: 'Lanzamiento Mobile App', color: '#e9d5ff' }, // Morado claro
+    { id: 2, name: 'Campaña Marketing Q4', color: '#fde047' }, // Amarillo
+    { id: 3, name: 'Rediseño Sitio Web', color: '#f87171' }, // Rojo
   ];
 
   const handleNext = () => {

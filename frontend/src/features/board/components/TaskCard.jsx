@@ -9,7 +9,7 @@ const TaskCard = (props) => {
   return <SortableTaskCard {...props} />;
 };
 
-const SortableTaskCard = ({ task, isExpanded, onToggle, color, onEdit, onDelete, onComments }) => {
+const SortableTaskCard = ({ task, isExpanded, onToggle, color, onEdit, onDelete, onComments, columnId, onAssignSelf }) => {
   const {
     attributes,
     listeners,
@@ -39,6 +39,8 @@ const SortableTaskCard = ({ task, isExpanded, onToggle, color, onEdit, onDelete,
       attributes={attributes}
       listeners={listeners}
       isDragging={isDragging}
+      columnId={columnId}
+      onAssignSelf={onAssignSelf}
     />
   );
 };
@@ -56,7 +58,9 @@ const TaskCardUI = ({
     style,
     attributes,
     listeners,
-    isDragging
+    isDragging,
+    columnId,
+    onAssignSelf
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -99,16 +103,22 @@ const TaskCardUI = ({
           {task.title}
         </h3>
         
-        {/* icono de menu */}
-        <div 
-            className={`text-white/80 hover:text-white transition-opacity duration-300 ${
-                (isHovered || isExpanded || isOverlay) && !isDragging ? 'opacity-100' : 'opacity-0'
-            }`}
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-            </svg>
-        </div>
+        {/* accion: agregar/asignarse o nada */}
+        {columnId === 'inProgress' && onAssignSelf && (
+             <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onAssignSelf(task);
+                }}
+                className={`text-white/80 hover:text-white transition-opacity duration-300 ${
+                    (isHovered || isExpanded || isOverlay) && !isDragging ? 'opacity-100' : 'opacity-0'
+                }`}
+             >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+             </button>
+        )}
       </div>
 
       {/* lo que se ve cuando la abres */}

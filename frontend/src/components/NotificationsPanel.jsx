@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import NewMessageModal from './NewMessageModal';
 
 const NotificationsPanel = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState('proyecto');
   const [isExiting, setIsExiting] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
 
   React.useEffect(() => {
     if (isOpen) {
@@ -125,7 +127,11 @@ const NotificationsPanel = ({ isOpen, onClose }) => {
               </div>
 
               {/* FAB */}
-              <button className="absolute bottom-6 right-6 bg-kanbas-blue text-white rounded-full p-3 shadow-lg hover:bg-blue-600 transition transform hover:scale-105">
+              {/* FAB */}
+              <button 
+                onClick={() => setIsMessageModalOpen(true)}
+                className="absolute bottom-6 right-6 bg-kanbas-blue text-white rounded-full p-3 shadow-lg hover:bg-blue-600 transition transform hover:scale-105"
+              >
                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
@@ -135,6 +141,7 @@ const NotificationsPanel = ({ isOpen, onClose }) => {
 
         </div>
       </div>
+      <NewMessageModal isOpen={isMessageModalOpen} onClose={() => setIsMessageModalOpen(false)} />
     </div>
   );
 };

@@ -6,6 +6,7 @@ import CreateTaskModal from '../../tasks/components/CreateTaskModal';
 import DeleteTaskModal from '../../tasks/components/DeleteTaskModal';
 import AssignTaskModal from '../../tasks/components/AssignTaskModal';
 import TaskCommentsModal from '../../tasks/components/TaskCommentsModal';
+import TaskTransitionModal from '../../tasks/components/TaskTransitionModal';
 import { 
   DndContext, 
   DragOverlay, 
@@ -33,27 +34,34 @@ const BoardPage = ({ project, onBack }) => {
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [pendingAssignment, setPendingAssignment] = useState(null); // { taskId, sourceContainer, targetContainer, overIndex }
 
+  // transiciones de tareas (submit, approve, reject)
+  const [transitionModal, setTransitionModal] = useState({
+      isOpen: false,
+      type: null, // 'SUBMIT', 'REJECT', 'APPROVE'
+      pendingTransition: null // { taskId, source, dest, task }
+  });
+
   // datos de mentira
   const [tasks, setTasks] = useState({
     todo: [
-      { id: 1, title: 'Tarea 1', description: 'Descripcion de ejemplo Descripcion de ejemplo', members: [] },
-      { id: 2, title: 'Tarea 2', description: 'Descripcion de ejemplo Descripcion de ejemplo', members: [] },
-      { id: 3, title: 'Tarea 3', description: 'Descripcion de ejemplo Descripcion de ejemplo Descripcion de ejemplo Descripcion de ejemplo', members: [] },
+      { id: 1, title: 'Diseñar Icono App', description: 'Crear versiones del icono en diferentes resoluciones para iOS y Android. Exportar assets.', members: [] },
+      { id: 2, title: 'Definir paleta de colores', description: 'Seleccionar colores primarios, secundarios y de acento. Verificar contraste y accesibilidad.', members: [] },
+      { id: 3, title: 'Investigar competencia', description: 'Analizar apps similares. Documentar features clave y flow de usuario.', members: [] },
     ],
     inProgress: [
-      { id: 4, title: 'Tarea 4', description: 'En progreso...', members: [] },
-      { id: 5, title: 'Tarea 5', description: 'En progreso...', members: [{name: 'Jose Cortez'}] },
-      { id: 6, title: 'Tarea 6', description: 'En progreso...', members: [] },
+      { id: 4, title: 'Desarrollar Login', description: 'Implementar pantalla de login. Conectar con API de autenticación. Validar inputs.', members: [] },
+      { id: 5, title: 'Integrar API Maps', description: 'Configurar Google Maps SDK. Mostrar ubicación del usuario en tiempo real.', members: [{name: 'Jose Cortez'}] },
+      { id: 6, title: 'Crear componente Botón', description: 'Desarrollar componente reutilizable Button con variantes primary, secondary, ghost.', members: [] },
     ],
     review: [
-      { id: 7, title: 'Tarea 1', description: 'Revision...', members: [] },
-      { id: 8, title: 'Tarea 2', description: 'Revision...', members: [] },
-      { id: 9, title: 'Tarea 3', description: 'Revision...', members: [] },
+      { id: 7, title: 'Testear en iOS', description: 'Verificar funcionamiento en iPhone 14 y 15. Checar notch y safe areas.', members: [] },
+      { id: 8, title: 'Revisión de textos', description: 'Corregir ortografía y redacción en onboarding y perfil.', members: [] },
+      { id: 9, title: 'Code Review: Auth', description: 'Revisar PR #123. Checar manejo de tokens y seguridad.', members: [] },
     ],
     done: [
-      { id: 10, title: 'Tarea 4', description: 'Hecho...', members: [] },
-      { id: 11, title: 'Tarea 5', description: 'Hecho...', members: [] },
-      { id: 12, title: 'Tarea 6', description: 'Hecho...', members: [] },
+      { id: 10, title: 'Configurar repositorio', description: 'Crear repo en GitHub. Configurar .gitignore y reglas de protección de main.', members: [] },
+      { id: 11, title: 'Comprar dominio', description: 'Adquirir dominio .com para landing page. Configurar DNS.', members: [] },
+      { id: 12, title: 'Setup CI/CD', description: 'Configurar flujo de despliegue automático con GitHub Actions.', members: [] },
     ]
   });
 
@@ -97,8 +105,8 @@ const BoardPage = ({ project, onBack }) => {
       
       const validMoves = {
           'todo': ['inProgress'],
-          'inProgress': ['review'],
-          'review': ['inProgress', 'done'],
+          'inProgress': ['review'], // puede ir a review
+          'review': ['inProgress', 'done'], // puede regresar a progress (rechazar) o ir a done (aceptar)
           'done': []
       };
       
@@ -193,15 +201,12 @@ const BoardPage = ({ project, onBack }) => {
         end: activeContainer // Should be same as overContainer usually
     });
 
-    // 1. checar si hay que asignar (Todo -> en progreso)
+    // 1. Asignar (Todo -> In Progress)
     if (
         startContainer === 'todo' && 
         (overContainer === 'inProgress' || activeContainer === 'inProgress')
     ) {
-        // la tarea ya se movio
-        // buscamos la tarea donde debe estar
         const task = tasks['inProgress'].find(t => t.id.toString() === active.id.toString());
-        
         if (task) {
             const currentUser = "Jose Cortez";
             const isAssigned = task.members.some(m => m.name === currentUser);
@@ -216,6 +221,66 @@ const BoardPage = ({ project, onBack }) => {
                 });
                 setAssignModalOpen(true);
             }
+        }
+    }
+
+    // 2. Entregar (In Progress -> Review) -> SUBMIT
+    if (
+        startContainer === 'inProgress' &&
+        (overContainer === 'review' || activeContainer === 'review')
+    ) {
+        const task = tasks['review'].find(t => t.id.toString() === active.id.toString());
+        if (task) {
+            setTransitionModal({
+                isOpen: true,
+                type: 'SUBMIT',
+                pendingTransition: {
+                    taskId: task.id,
+                    source: 'inProgress',
+                    dest: 'review',
+                    task: task
+                }
+            });
+        }
+    }
+
+    // 3. Rechazar (Review -> In Progress) -> REJECT
+    if (
+        startContainer === 'review' &&
+        (overContainer === 'inProgress' || activeContainer === 'inProgress')
+    ) {
+        const task = tasks['inProgress'].find(t => t.id.toString() === active.id.toString());
+        if (task) {
+            setTransitionModal({
+                isOpen: true,
+                type: 'REJECT',
+                pendingTransition: {
+                    taskId: task.id,
+                    source: 'review',
+                    dest: 'inProgress',
+                    task: task
+                }
+            });
+        }
+    }
+
+     // 4. Aceptar (Review -> Done) -> APPROVE
+     if (
+        startContainer === 'review' &&
+        (overContainer === 'done' || activeContainer === 'done')
+    ) {
+        const task = tasks['done'].find(t => t.id.toString() === active.id.toString());
+        if (task) {
+            setTransitionModal({
+                isOpen: true,
+                type: 'APPROVE',
+                pendingTransition: {
+                    taskId: task.id,
+                    source: 'review',
+                    dest: 'done',
+                    task: task
+                }
+            });
         }
     }
 
@@ -272,6 +337,59 @@ const BoardPage = ({ project, onBack }) => {
     setPendingAssignment(null);
   };
 
+  const handleConfirmTransition = (comment) => {
+    const { pendingTransition, type } = transitionModal;
+
+    if (pendingTransition) {
+        const { task, dest } = pendingTransition;
+        
+        if (comment && comment.trim() !== '') {
+             // Agregar comentario a la tarea
+             const updatedTask = {
+                 ...task,
+                 comments: [...(task.comments || []), { 
+                     id: Date.now(), 
+                     text: comment, 
+                     author: "Jose Cortez", 
+                     timestamp: new Date().toISOString() 
+                 }]
+             };
+             
+             setTasks(prev => ({
+                 ...prev,
+                 [dest]: prev[dest].map(t => t.id === task.id ? updatedTask : t)
+             }));
+        }
+    }
+    setTransitionModal({ isOpen: false, type: null, pendingTransition: null });
+  };
+
+  const handleCancelTransition = () => {
+      // deshacer movimiento si cancelan
+      const { pendingTransition } = transitionModal;
+
+      if (pendingTransition) {
+        const { task, source, dest } = pendingTransition;
+        
+        setTasks(prev => {
+             const isInDest = prev[dest].some(t => t.id === task.id);
+             if (!isInDest) return prev;
+
+             const destList = prev[dest].filter(t => t.id !== task.id);
+             const sourceList = prev[source].some(t => t.id === task.id) 
+                ? prev[source] 
+                : [...prev[source], task];
+             
+             return {
+                 ...prev,
+                 [source]: sourceList,
+                 [dest]: destList
+             };
+        });
+      }
+      setTransitionModal({ isOpen: false, type: null, pendingTransition: null });
+  };
+
 
   const handleEditTask = (task) => {
     setEditingTask(task);
@@ -325,6 +443,20 @@ const BoardPage = ({ project, onBack }) => {
   };
   
 
+  const handleManualAssign = (task) => {
+      const currentUser = "Jose Cortez";
+      const isAssigned = task.members.some(m => m.name === currentUser);
+      
+      if (!isAssigned) {
+          setPendingAssignment({
+              taskId: task.id,
+              source: 'inProgress',
+              dest: 'inProgress',
+              task: task
+          });
+          setAssignModalOpen(true);
+      }
+  };
 
   return (
     <MainLayout isBoardView={true} projectName={project?.name || "Proyecto Ejemplo"} onLogoClick={onBack}>
@@ -354,6 +486,7 @@ const BoardPage = ({ project, onBack }) => {
                 onEditTask={handleEditTask}
                 onDeleteTask={handleDeleteTask}
                 onCommentsTask={handleOpenComments}
+                onAssignSelf={handleManualAssign}
             />
             <BoardColumn 
                 id="review"
@@ -400,6 +533,14 @@ const BoardPage = ({ project, onBack }) => {
         onClose={handleCancelAssignment}
         onConfirm={handleConfirmAssignment}
         taskName={pendingAssignment?.task.title}
+      />
+
+      <TaskTransitionModal
+        isOpen={transitionModal.isOpen}
+        type={transitionModal.type}
+        onClose={handleCancelTransition}
+        onConfirm={handleConfirmTransition}
+        taskName={transitionModal.pendingTransition?.task.title}
       />
       
       <TaskCommentsModal
