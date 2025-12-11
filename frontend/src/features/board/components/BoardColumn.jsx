@@ -3,7 +3,7 @@ import TaskCard from './TaskCard';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
-const BoardColumn = ({ title, tasks, color, onAddTask, onEditTask, onDeleteTask, onCommentsTask, id }) => {
+const BoardColumn = ({ title, tasks, color, onAddTask, onEditTask, onDeleteTask, onCommentsTask, id, onAssignSelf }) => {
   const [expandedTaskId, setExpandedTaskId] = useState(null);
   
   const { setNodeRef } = useDroppable({
@@ -39,6 +39,8 @@ const BoardColumn = ({ title, tasks, color, onAddTask, onEditTask, onDeleteTask,
               onEdit={onEditTask}
               onDelete={onDeleteTask}
               onComments={onCommentsTask}
+              columnId={id}
+              onAssignSelf={onAssignSelf}
             />
           ))}
         </SortableContext>
