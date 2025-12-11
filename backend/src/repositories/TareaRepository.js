@@ -58,25 +58,18 @@ class TareaRepository {
     return new Tarea(result.rows[0]);
   }
 
-  async updateTarea(tarea) {
-    const result = await pool.query(
-      `UPDATE tareas
-       SET titulo = $1,
-           descripcion = $2,
-           prioridad = $3,
-           fechalimite = $4
-       WHERE idtarea = $5
-       RETURNING *`,
-      [
-        tarea.titulo,
-        tarea.descripcion,
-        tarea.prioridad,
-        tarea.fechaLimite,
-        tarea.idTarea,
-      ]
-    );
+  async updateEquipo(idTarea, idEquipo) {
+    await pool.query(`UPDATE tareas SET idequipo = $1 WHERE idtarea = $2`, [
+      idEquipo,
+      idTarea,
+    ]);
+  }
 
-    return new Tarea(result.rows[0]);
+  async removeIntegrante(idTarea, idIntegrante) {
+    await pool.query(
+      `DELETE FROM asignacion WHERE idtarea = $1 AND idintegrante = $2`,
+      [idTarea, idIntegrante]
+    );
   }
 
   async deleteTarea(idTarea) {

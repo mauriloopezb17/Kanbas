@@ -88,9 +88,20 @@ class UsuarioController {
 
   async obtenerPerfil(req, res) {
     try {
-      const { idUsuario } = req.params;
-      const perfil = await UsuarioService.obtenerPerfil(idUsuario);
-      return res.status(200).json(perfil);
+      const idUsuario = req.user.idUsuario;
+
+      const usuario = await UsuarioService.obtenerPerfil(idUsuario);
+
+      return res.status(200).json(usuario);
+    } catch (error) {
+      return res.status(400).json({ error: error.message });
+    }
+  }
+
+  async getAllUsuarios(req, res) {
+    try {
+      const usuarios = await UsuarioService.getAllUsuarios();
+      return res.status(200).json(usuarios);
     } catch (error) {
       return res.status(400).json({ error: error.message });
     }

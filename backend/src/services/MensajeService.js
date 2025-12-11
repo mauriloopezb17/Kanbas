@@ -72,6 +72,32 @@ class MensajeService {
 
     return await MensajeRepository.getMensajesEnviados(idUsuario);
   }
+
+  async enviarMensaje(idEmisor, receptores, contenido) {
+    if (!contenido?.trim()) {
+      throw new Error("El contenido del mensaje no puede estar vacío.");
+    }
+
+    if (!Array.isArray(receptores) || receptores.length === 0) {
+      throw new Error("Debe seleccionar al menos un receptor.");
+    }
+
+    const mensaje = await MensajeRepository.crearMensaje(idEmisor, contenido);
+
+    for (const receptor of receptores) {
+      const idUsuario = await UsuarioRepository.resolverUsuario(receptor);
+
+      if (!idUsuario) {
+        throw new Error(`El receptor '${receptor}' no existe.`);
+      }
+
+      if (idUsuario === idEmisor) continue;
+
+      await MensajeRepository.agregarReceptor(mensaje.idmensaje, idUsuario);
+    }
+
+    return mensaje;
+  }
 }
 
 export default new MensajeService();

@@ -100,6 +100,38 @@ class UsuarioRepository {
 
     return null;
   }
+
+  async findAll() {
+    const result = await pool.query(
+      `SELECT idusuario, nombre, apellido, email, usuario FROM usuarios`
+    );
+    return result.rows;
+  }
+
+  async resolverUsuario(value) {
+    if (!isNaN(Number(value))) {
+      const result = await pool.query(
+        "SELECT idusuario FROM usuarios WHERE idusuario = $1",
+        [value]
+      );
+      return result.rows[0]?.idusuario || null;
+    }
+
+    if (value.includes("@")) {
+      const result = await pool.query(
+        "SELECT idusuario FROM usuarios WHERE email = $1",
+        [value]
+      );
+      return result.rows[0]?.idusuario || null;
+    }
+
+    const result = await pool.query(
+      "SELECT idusuario FROM usuarios WHERE usuario = $1",
+      [value]
+    );
+
+    return result.rows[0]?.idusuario || null;
+  }
 }
 
 export default new UsuarioRepository();

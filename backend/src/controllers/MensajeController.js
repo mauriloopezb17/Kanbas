@@ -3,17 +3,19 @@ import MensajeService from "../services/MensajeService.js";
 class MensajeController {
   async enviarMensaje(req, res) {
     try {
-      const { idUsuarioEmisor, idProyecto, contenido, destinatarios } =
-        req.body;
+      const idEmisor = req.user.idUsuario;
+      const { receptores, contenido } = req.body;
 
-      const data = await MensajeService.crearMensaje({
-        idUsuarioEmisor,
-        idProyecto,
-        contenido,
-        destinatarios,
+      const mensaje = await MensajeService.enviarMensaje(
+        idEmisor,
+        receptores,
+        contenido
+      );
+
+      return res.status(201).json({
+        mensaje: "Mensaje enviado correctamente.",
+        data: mensaje,
       });
-
-      return res.status(201).json(data);
     } catch (error) {
       return res.status(400).json({ error: error.message });
     }

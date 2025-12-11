@@ -73,4 +73,11 @@ router.get(
   TareaController.obtenerComentarios
 );
 
+router.get(
+  "/:idTarea/:idProyecto",
+  authMiddleware,
+  projectMiddleware,
+  TareaController.obtenerTarea
+);
+
 export default router;

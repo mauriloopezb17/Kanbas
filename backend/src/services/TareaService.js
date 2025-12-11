@@ -21,13 +21,13 @@ class TareaService {
     );
 
     if (!rol) throw new Error("No perteneces al proyecto.");
-
     if (!["SRM", "SDM", "Product Owner", "PO"].includes(rol)) {
       throw new Error("No tienes permisos para crear tareas.");
     }
 
     if (!titulo) throw new Error("El título es obligatorio.");
     if (!descripcion) throw new Error("La descripción es obligatoria.");
+
     if (!prioridad) prioridad = 1;
 
     const equipos = await EquipoRepository.getEquiposByProyecto(idProyecto);
@@ -47,18 +47,14 @@ class TareaService {
     });
 
     if (integrantes.length > 0) {
-      const integrantesEquipo = await IntegrantesRepository.getIntegrantes(
-        idEquipo
-      );
+      const lista = await IntegrantesRepository.getIntegrantes(idEquipo);
 
       for (const idIntegrante of integrantes) {
-        const existe = integrantesEquipo.find(
-          (i) => i.idintegrante === idIntegrante
-        );
+        const existe = lista.find((i) => i.idintegrante === idIntegrante);
 
         if (!existe) {
           throw new Error(
-            `El integrante ${idIntegrante} no pertenece a este equipo.`
+            `El integrante ${idIntegrante} no pertenece al equipo seleccionado.`
           );
         }
 
@@ -119,12 +115,40 @@ class TareaService {
   async obtenerTareasDelProyecto(idProyecto) {
     const tareas = await TareaRepository.findByProyecto(idProyecto);
 
-    return {
-      todo: tareas.filter((t) => t.estado === "TODO"),
-      inProgress: tareas.filter((t) => t.estado === "IN_PROGRESS"),
-      review: tareas.filter((t) => t.estado === "REVIEW"),
-      done: tareas.filter((t) => t.estado === "DONE"),
+    const result = {
+      todo: [],
+      inProgress: [],
+      review: [],
+      done: [],
     };
+
+    for (const tarea of tareas) {
+      const asignados = await TareaRepository.getUsuariosAsignados(
+        tarea.idTarea
+      );
+
+      const tareaConAsignados = {
+        ...tarea,
+        asignados,
+      };
+
+      switch (tarea.estado) {
+        case "TODO":
+          result.todo.push(tareaConAsignados);
+          break;
+        case "IN_PROGRESS":
+          result.inProgress.push(tareaConAsignados);
+          break;
+        case "REVIEW":
+          result.review.push(tareaConAsignados);
+          break;
+        case "DONE":
+          result.done.push(tareaConAsignados);
+          break;
+      }
+    }
+
+    return result;
   }
 
   async editarTarea(idTarea, idProyecto, datos, idUsuarioSolicitante) {
@@ -140,7 +164,17 @@ class TareaService {
     const tareaActual = await TareaRepository.findById(idTarea);
     if (!tareaActual) throw new Error("La tarea no existe.");
 
-    const tareaEditada = await TareaRepository.updateTarea({
+    let idEquipoFinal = datos.idEquipo ?? tareaActual.idEquipo;
+
+    if (datos.idEquipo) {
+      const equipos = await EquipoRepository.getEquiposByProyecto(idProyecto);
+      const equipo = equipos.find((e) => e.idEquipo === datos.idEquipo);
+      if (!equipo) throw new Error("El equipo no pertenece al proyecto.");
+
+      await TareaRepository.updateEquipo(idTarea, datos.idEquipo);
+    }
+
+    const nuevaTarea = await TareaRepository.updateTarea({
       idTarea,
       titulo: datos.titulo ?? tareaActual.titulo,
       descripcion: datos.descripcion ?? tareaActual.descripcion,
@@ -148,9 +182,49 @@ class TareaService {
       fechaLimite: datos.fechaLimite ?? tareaActual.fechaLimite,
     });
 
+    if (Array.isArray(datos.integrantes)) {
+      const integrantesEquipo = await IntegrantesRepository.getIntegrantes(
+        idEquipoFinal
+      );
+
+      for (const idIntegrante of datos.integrantes) {
+        const existe = integrantesEquipo.find(
+          (i) => i.idintegrante === idIntegrante
+        );
+        if (!existe)
+          throw new Error(
+            `El integrante ${idIntegrante} no pertenece al equipo.`
+          );
+      }
+
+      const asignadosActuales = await TareaRepository.getUsuariosAsignados(
+        idTarea
+      );
+      const asignadosIdIntegrante = asignadosActuales.map(
+        (a) => a.idintegrante
+      );
+
+      for (const oldId of asignadosIdIntegrante) {
+        if (!datos.integrantes.includes(oldId)) {
+          await TareaRepository.removeIntegrante(idTarea, oldId);
+        }
+      }
+
+      for (const newId of datos.integrantes) {
+        if (!asignadosIdIntegrante.includes(newId)) {
+          await TareaRepository.assignIntegrante(idTarea, newId);
+        }
+      }
+    }
+
+    const asignadosFinales = await TareaRepository.getUsuariosAsignados(
+      idTarea
+    );
+
     return {
       mensaje: "Tarea actualizada correctamente.",
-      tarea: tareaEditada,
+      tarea: nuevaTarea,
+      asignados: asignadosFinales,
     };
   }
 
@@ -210,6 +284,29 @@ class TareaService {
     if (!rol) throw new Error("No perteneces al proyecto.");
 
     return await ComentarioRepository.findByTarea(idTarea);
+  }
+
+  async obtenerTarea(idTarea, idProyecto) {
+    const tarea = await TareaRepository.findById(idTarea);
+
+    if (!tarea) throw new Error("La tarea no existe.");
+
+    if (tarea.idProyecto !== idProyecto) {
+      throw new Error("La tarea no pertenece a este proyecto.");
+    }
+
+    const asignados = await TareaRepository.getUsuariosAsignados(idTarea);
+
+    return {
+      idTarea: tarea.idTarea,
+      titulo: tarea.titulo,
+      descripcion: tarea.descripcion,
+      prioridad: tarea.prioridad,
+      fechaLimite: tarea.fechaLimite,
+      estado: tarea.estado,
+      idEquipo: tarea.idEquipo,
+      asignados,
+    };
   }
 }
 

@@ -10,6 +10,7 @@ class TareaController {
         descripcion,
         prioridad,
         fechaLimite,
+        integrantes,
       } = req.body;
 
       const idUsuarioSolicitante = req.user.idUsuario;
@@ -21,6 +22,7 @@ class TareaController {
         descripcion,
         prioridad,
         fechaLimite,
+        integrantes,
         idUsuarioSolicitante,
       });
 
@@ -159,6 +161,21 @@ class TareaController {
       );
 
       return res.status(200).json(comentarios);
+    } catch (error) {
+      return res.status(400).json({ error: error.message });
+    }
+  }
+
+  async obtenerTarea(req, res) {
+    try {
+      const { idTarea, idProyecto } = req.params;
+
+      const data = await TareaService.obtenerTarea(
+        parseInt(idTarea),
+        parseInt(idProyecto)
+      );
+
+      return res.status(200).json(data);
     } catch (error) {
       return res.status(400).json({ error: error.message });
     }

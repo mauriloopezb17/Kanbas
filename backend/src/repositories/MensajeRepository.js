@@ -31,6 +31,25 @@ class MensajeRepository {
 
     return result.rows;
   }
+
+  async crearMensaje(idEmisor, contenido) {
+    const result = await pool.query(
+      `INSERT INTO mensajes (idusuario_emisor, contenido, fecha)
+     VALUES ($1, $2, NOW())
+     RETURNING *`,
+      [idEmisor, contenido]
+    );
+
+    return result.rows[0];
+  }
+
+  async agregarReceptor(idMensaje, idUsuario) {
+    await pool.query(
+      `INSERT INTO mensajes_usuarios (idmensaje, idusuarioreceptor)
+     VALUES ($1, $2)`,
+      [idMensaje, idUsuario]
+    );
+  }
 }
 
 export default new MensajeRepository();

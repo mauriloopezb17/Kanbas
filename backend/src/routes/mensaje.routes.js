@@ -6,12 +6,7 @@ import projectMiddleware from "../middlewares/projectMiddleware.js";
 
 const router = Router();
 
-router.post(
-  "/enviar",
-  authMiddleware,
-  projectMiddleware,
-  MensajeController.enviarMensaje
-);
+router.post("/enviar", authMiddleware, MensajeController.enviarMensaje);
 
 router.get(
   "/recibidos/:idUsuario",

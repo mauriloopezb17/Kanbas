@@ -52,4 +52,10 @@ router.get(
   EquipoController.getEquiposByProyecto
 );
 
+router.get(
+  "/:idEquipo/integrantes",
+  authMiddleware,
+  EquipoController.getIntegrantesByEquipo
+);
+
 export default router;

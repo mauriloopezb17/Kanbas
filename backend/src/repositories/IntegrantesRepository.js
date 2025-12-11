@@ -14,10 +14,16 @@ class IntegrantesRepository {
 
   async getIntegrantes(idEquipo) {
     const result = await pool.query(
-      `SELECT u.* 
-             FROM integrantes i
-             JOIN usuarios u ON u.idusuario = i.idusuario
-             WHERE i.idequipo = $1`,
+      `SELECT 
+          i.idintegrante,
+          u.idusuario,
+          u.nombre,
+          u.apellido,
+          u.email,
+          u.usuario
+       FROM integrantes i
+       JOIN usuarios u ON u.idusuario = i.idusuario
+       WHERE i.idequipo = $1`,
       [idEquipo]
     );
 

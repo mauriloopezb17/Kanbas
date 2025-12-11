@@ -1,5 +1,6 @@
 import EquipoService from "../services/EquipoService.js";
 import EquipoRepository from "../repositories/EquipoRepository.js";
+import IntegrantesRepository from "../repositories/IntegrantesRepository.js";
 
 class EquipoController {
   async crearEquipo(req, res) {
@@ -97,6 +98,18 @@ class EquipoController {
       const equipos = await EquipoRepository.getEquiposByProyecto(idProyecto);
 
       return res.status(200).json(equipos);
+    } catch (error) {
+      return res.status(400).json({ error: error.message });
+    }
+  }
+
+  async getIntegrantesByEquipo(req, res) {
+    try {
+      const { idEquipo } = req.params;
+
+      const integrantes = await IntegrantesRepository.getIntegrantes(idEquipo);
+
+      return res.status(200).json(integrantes);
     } catch (error) {
       return res.status(400).json({ error: error.message });
     }

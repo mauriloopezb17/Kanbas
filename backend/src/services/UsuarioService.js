@@ -84,15 +84,22 @@ class UsuarioService {
   }
 
   async obtenerPerfil(idUsuario) {
-    const user = await UsuarioRepository.findById(idUsuario);
-    if (!user) throw new Error("Usuario no encontrado.");
+    const usuario = await UsuarioRepository.findById(idUsuario);
 
-    const proyectos = await UsuarioRepository.getProjectsOfUser(idUsuario);
-
+    if (!usuario) {
+      throw new Error("El usuario no existe.");
+    }
     return {
-      usuario: user,
-      proyectos,
+      idUsuario: usuario.idUsuario,
+      nombre: usuario.nombre,
+      apellido: usuario.apellido,
+      email: usuario.email,
+      usuario: usuario.usuario,
     };
+  }
+
+  async getAllUsuarios() {
+    return await UsuarioRepository.findAll();
   }
 }
 
