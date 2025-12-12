@@ -86,4 +86,11 @@ router.delete(
   TareaController.eliminarTarea
 );
 
+router.post(
+  "/autoasignar/:idTarea/:idProyecto",
+  authMiddleware,
+  projectMiddleware,
+  TareaController.autoasignarTarea
+);
+
 export default router;

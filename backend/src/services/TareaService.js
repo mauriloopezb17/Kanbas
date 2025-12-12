@@ -303,6 +303,61 @@ class TareaService {
       asignados,
     };
   }
+
+  async autoasignarTarea(idTarea, idProyecto, idUsuarioSolicitante) {
+    const rol = await UsuarioRepository.getUserRoleInProject(
+      idUsuarioSolicitante,
+      idProyecto
+    );
+
+    if (!rol) {
+      throw new Error("No perteneces a este proyecto.");
+    }
+
+    const tarea = await TareaRepository.findById(idTarea);
+    if (!tarea) throw new Error("La tarea no existe.");
+
+    if (tarea.idProyecto !== idProyecto) {
+      throw new Error("La tarea no pertenece a este proyecto.");
+    }
+
+    const idEquipo = tarea.idEquipo;
+
+    const integrantesEquipo = await IntegrantesRepository.getIntegrantes(
+      idEquipo
+    );
+
+    const integranteEncontrado = integrantesEquipo.find(
+      (i) => i.idusuario === idUsuarioSolicitante
+    );
+
+    if (!integranteEncontrado) {
+      throw new Error("No perteneces al equipo asignado a esta tarea.");
+    }
+
+    const asignadosActuales = await TareaRepository.getUsuariosAsignados(
+      idTarea
+    );
+
+    const yaAsignado = asignadosActuales.find(
+      (a) => a.idusuario === idUsuarioSolicitante
+    );
+
+    if (yaAsignado) {
+      throw new Error("Ya estás asignado a esta tarea.");
+    }
+
+    await TareaRepository.assignIntegrante(
+      idTarea,
+      integranteEncontrado.idintegrante
+    );
+
+    return {
+      mensaje: "Te has autoasignado correctamente a esta tarea.",
+      idTarea,
+      idUsuario: idUsuarioSolicitante,
+    };
+  }
 }
 
 export default new TareaService();

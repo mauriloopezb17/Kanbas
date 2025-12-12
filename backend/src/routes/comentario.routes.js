@@ -2,22 +2,21 @@ import { Router } from "express";
 import ComentarioController from "../controllers/ComentarioController.js";
 
 import authMiddleware from "../middlewares/authMiddleware.js";
-import projectMiddleware from "../middlewares/projectMiddleware.js";
 
 const router = Router();
 
-router.post(
-  "/crear",
+router.post("/crear", authMiddleware, ComentarioController.crearComentario);
+
+router.get(
+  "/listar/:idTarea",
   authMiddleware,
-  projectMiddleware,
-  ComentarioController.crearComentario
+  ComentarioController.obtenerComentarios
 );
 
-router.post(
-  "/listar/:idTarea/:idProyecto",
+router.delete(
+  "/eliminar/:idComentario",
   authMiddleware,
-  projectMiddleware,
-  ComentarioController.obtenerComentarios
+  ComentarioController.eliminarComentario
 );
 
 export default router;

@@ -1,8 +1,9 @@
 export default class Comentario {
-  constructor({ idComentario, contenido, fecha, autor }) {
-    this.idComentario = idComentario;
+  constructor({ idcomentario, contenido, fecha, idtarea, idusuario }) {
+    this.idComentario = idcomentario;
     this.contenido = contenido;
     this.fecha = fecha;
-    this.autor = autor;
+    this.idTarea = idtarea;
+    this.idUsuario = idusuario;
   }
 }

@@ -4,24 +4,19 @@ import TareaRepository from "../repositories/TareaRepository.js";
 
 class ComentarioService {
   async crearComentario({ idUsuarioAutor, idTarea, contenido }) {
-    if (!contenido || contenido.trim() === "") {
+    if (!contenido.trim()) {
       throw new Error("El contenido del comentario no puede estar vacío.");
     }
-    const tarea = await TareaRepository.findById(idTarea);
-    if (!tarea) {
-      throw new Error("La tarea no existe.");
-    }
 
-    const idProyecto = tarea.idProyecto;
+    const tarea = await TareaRepository.findById(idTarea);
+    if (!tarea) throw new Error("La tarea no existe.");
 
     const rol = await UsuarioRepository.getUserRoleInProject(
       idUsuarioAutor,
-      idProyecto
+      tarea.idProyecto
     );
 
-    if (!rol) {
-      throw new Error("No perteneces al proyecto, no puedes comentar.");
-    }
+    if (!rol) throw new Error("No perteneces al proyecto.");
 
     const comentarioNuevo = await ComentarioRepository.create({
       contenido,
@@ -35,9 +30,31 @@ class ComentarioService {
       comentario: comentarioNuevo,
     };
   }
+
   async obtenerComentarios(idTarea, idUsuarioSolicitante) {
     const tarea = await TareaRepository.findById(idTarea);
     if (!tarea) throw new Error("La tarea no existe.");
+
+    const rol = await UsuarioRepository.getUserRoleInProject(
+      idUsuarioSolicitante,
+      tarea.idProyecto
+    );
+
+    if (!rol) throw new Error("No perteneces al proyecto.");
+
+    return await ComentarioRepository.findByTarea(idTarea);
+  }
+  async eliminarComentario(idComentario, idUsuarioSolicitante) {
+    const comentario = await ComentarioRepository.findById(idComentario);
+
+    if (!comentario) {
+      throw new Error("El comentario no existe.");
+    }
+
+    const tarea = await TareaRepository.findById(comentario.idtarea);
+    if (!tarea) {
+      throw new Error("La tarea del comentario no existe.");
+    }
 
     const idProyecto = tarea.idProyecto;
 
@@ -47,12 +64,69 @@ class ComentarioService {
     );
 
     if (!rol) {
-      throw new Error("No perteneces al proyecto.");
+      throw new Error("No perteneces a este proyecto.");
     }
 
-    const comentarios = await ComentarioRepository.findByTarea(idTarea);
+    const puedeEliminar =
+      comentario.idusuario === idUsuarioSolicitante ||
+      ["SRM", "SDM", "Product Owner", "PO"].includes(rol);
 
-    return comentarios;
+    if (!puedeEliminar) {
+      throw new Error("No tienes permisos para eliminar este comentario.");
+    }
+
+    const eliminado = await ComentarioRepository.delete(idComentario);
+
+    if (!eliminado) {
+      throw new Error("No se pudo eliminar el comentario.");
+    }
+
+    return {
+      mensaje: "Comentario eliminado correctamente.",
+      idComentario,
+    };
+  }
+  async eliminarComentario(idComentario, idUsuarioSolicitante) {
+    const comentario = await ComentarioRepository.findById(idComentario);
+
+    if (!comentario) {
+      throw new Error("El comentario no existe.");
+    }
+
+    const tarea = await TareaRepository.findById(comentario.idtarea);
+    if (!tarea) {
+      throw new Error("La tarea del comentario no existe.");
+    }
+
+    const idProyecto = tarea.idProyecto;
+
+    const rol = await UsuarioRepository.getUserRoleInProject(
+      idUsuarioSolicitante,
+      idProyecto
+    );
+
+    if (!rol) {
+      throw new Error("No perteneces a este proyecto.");
+    }
+
+    const puedeEliminar =
+      comentario.idusuario === idUsuarioSolicitante ||
+      ["SRM", "SDM", "Product Owner", "PO"].includes(rol);
+
+    if (!puedeEliminar) {
+      throw new Error("No tienes permisos para eliminar este comentario.");
+    }
+
+    const eliminado = await ComentarioRepository.delete(idComentario);
+
+    if (!eliminado) {
+      throw new Error("No se pudo eliminar el comentario.");
+    }
+
+    return {
+      mensaje: "Comentario eliminado correctamente.",
+      idComentario,
+    };
   }
 }
 

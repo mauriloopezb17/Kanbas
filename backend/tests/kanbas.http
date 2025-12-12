@@ -56,9 +56,9 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "idEquipo": 2,
+  "idEquipo": 4,
   "idProyecto": 2,
-  "emailOrUsername": "ian.coaquira@gmail.com"
+  "emailOrUsername": "puppett@gmail.com"
 }
 
 ### Obtener proyectos del usuario logueado
@@ -80,8 +80,8 @@ Content-Type: application/json
 
 {
   "idProyecto": 2,
-  "idEquipo": 3,
-  "titulo": "Diseño del frontend",
+  "idEquipo": 4,
+  "titulo": "prueba xddddd",
   "descripcion": "Centrar div",
   "prioridad": 1,
   "fechaLimite": "2025-12-24",
@@ -160,3 +160,26 @@ Authorization: Bearer {{token}}
 ###
 GET http://localhost:3000/api/usuarios/buscar?identifier=cobine
 Authorization: Bearer {{token}}
+
+### autoasignarse una tarea
+POST http://localhost:3000/api/tareas/autoasignar/4/2
+Authorization: Bearer {{token}}
+
+### crear comentario
+POST http://localhost:3000/api/comentarios/crear
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "idTarea": 4,
+  "contenido": "xddddd."
+}
+
+### obtener todos los comentarios de una tarea
+GET http://localhost:3000/api/comentarios/listar/4
+Authorization: Bearer {{token}}
+
+### eliminar comentario
+DELETE http://localhost:3000/api/comentarios/eliminar/3
+Authorization: Bearer {{token}}
+
