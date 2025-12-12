@@ -2,6 +2,7 @@ import UsuarioRepository from "../repositories/UsuarioRepository.js";
 import EquipoRepository from "../repositories/EquipoRepository.js";
 import IntegrantesRepository from "../repositories/IntegrantesRepository.js";
 import ProyectoRepository from "../repositories/ProyectoRepository.js";
+import NotificacionRepository from "../repositories/NotificacionRepository.js";
 
 class IntegranteService {
   async agregarIntegrante({
@@ -47,6 +48,28 @@ class IntegranteService {
       idEquipo,
       idUsuarioAgregar
     );
+
+    try {
+      const proyecto = await ProyectoRepository.findById(idProyecto);
+
+      const notificacion = await NotificacionRepository.crearNotificacion({
+        titulo: `Has sido añadido al equipo "${equipo.nombreEquipo}"`,
+        contenido: `Fuiste añadido al equipo "${
+          equipo.nombreEquipo
+        }" del proyecto "${proyecto?.nombreProyecto ?? ""}".`,
+        idUsuarioEmisor: idUsuarioSolicitante,
+      });
+
+      await NotificacionRepository.agregarDestinatario(
+        notificacion.idNotificacion,
+        idUsuarioAgregar
+      );
+    } catch (error) {
+      console.error(
+        "Error al generar notificación de asignación a equipo:",
+        error
+      );
+    }
 
     return {
       mensaje: "Integrante añadido correctamente.",

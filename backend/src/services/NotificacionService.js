@@ -12,9 +12,7 @@ class NotificacionService {
     destinatarios,
   }) {
     if (!titulo || !contenido) {
-      throw new Error(
-        "El título y contenido de la notificación son obligatorios."
-      );
+      throw new Error("El título y contenido son obligatorios.");
     }
 
     const rol = await UsuarioRepository.getUserRoleInProject(
@@ -23,18 +21,16 @@ class NotificacionService {
     );
 
     if (!rol) {
-      throw new Error(
-        "No perteneces al proyecto. No puedes enviar notificaciones."
-      );
+      throw new Error("No perteneces al proyecto.");
     }
 
-    const nuevaNotificacion = await NotificacionRepository.createNotificacion({
+    const nuevaNotificacion = await NotificacionRepository.crearNotificacion({
       titulo,
       contenido,
       idUsuarioEmisor,
     });
 
-    const idNotificacion = nuevaNotificacion.idNotificacion;
+    const idNotificacion = nuevaNotificacion.idnotificacion;
 
     if (!destinatarios || destinatarios.length === 0) {
       if (!["Product Owner", "PO", "SRM", "SDM"].includes(rol)) {
@@ -44,24 +40,23 @@ class NotificacionService {
       }
 
       const equipos = await EquipoRepository.getEquiposByProyecto(idProyecto);
-      let usuarios = [];
+      const usuarios = [];
 
       for (const eq of equipos) {
         const integrantes = await IntegrantesRepository.getIntegrantes(
-          eq.idEquipo
+          eq.idequipo
         );
         usuarios.push(...integrantes);
       }
 
-      const map = new Map();
-      usuarios.forEach((u) => map.set(u.idusuario, u));
+      const únicos = [
+        ...new Map(usuarios.map((u) => [u.idusuario, u])).values(),
+      ];
 
-      const listaUsuarios = [...map.values()];
-
-      for (const usuario of listaUsuarios) {
+      for (const usuario of únicos) {
         if (usuario.idusuario === idUsuarioEmisor) continue;
 
-        await NotificacionRepository.addDestinatario(
+        await NotificacionRepository.agregarDestinatario(
           idNotificacion,
           usuario.idusuario
         );
@@ -87,7 +82,7 @@ class NotificacionService {
         );
       }
 
-      await NotificacionRepository.addDestinatario(
+      await NotificacionRepository.agregarDestinatario(
         idNotificacion,
         idUsuarioDestino
       );
@@ -103,10 +98,7 @@ class NotificacionService {
     const usuario = await UsuarioRepository.findById(idUsuario);
     if (!usuario) throw new Error("El usuario no existe.");
 
-    const notificaciones =
-      await NotificacionRepository.getNotificacionesUsuario(idUsuario);
-
-    return notificaciones;
+    return await NotificacionRepository.getNotificacionesUsuario(idUsuario);
   }
 }
 

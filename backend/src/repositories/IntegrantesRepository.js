@@ -52,6 +52,24 @@ class IntegrantesRepository {
     if (result.rowCount === 0) return null;
     return result.rows[0];
   }
+  async findIntegranteById(idIntegrante) {
+    const result = await pool.query(
+      `SELECT 
+        i.idintegrante,
+        u.idusuario,
+        u.nombre,
+        u.apellido,
+        u.email,
+        u.usuario
+     FROM integrantes i
+     JOIN usuarios u ON u.idusuario = i.idusuario
+     WHERE i.idintegrante = $1`,
+      [idIntegrante]
+    );
+
+    if (result.rowCount === 0) return null;
+    return result.rows[0];
+  }
 }
 
 export default new IntegrantesRepository();

@@ -19,12 +19,7 @@ class ComentarioRepository {
        ORDER BY c.fecha ASC`,
       [idTarea]
     );
-    // map to raw objects with extra fields, or update model?
-    // Repository returning model instances usually strips extra fields if model is strict.
-    // Let's check Comentario.js model?
-    // If I cant check model, I'll return result.rows directly as this is a DTO-like usage for frontend.
-    // Usually "new Comentario(row)" might only assign known fields.
-    return result.rows; 
+    return result.rows;
   }
 
   async create({ contenido, fecha, idTarea, idUsuario }) {

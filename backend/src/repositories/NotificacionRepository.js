@@ -4,12 +4,20 @@ class NotificacionRepository {
   async crearNotificacion({ titulo, contenido, idUsuarioEmisor }) {
     const result = await pool.query(
       `INSERT INTO notificaciones (titulo, contenido, fecha, idusuario_emisor)
-       VALUES ($1, $2, NOW(), $3)
-       RETURNING *`,
+      VALUES ($1, $2, NOW(), $3)
+     RETURNING *`,
       [titulo, contenido, idUsuarioEmisor]
     );
 
-    return result.rows[0];
+    const row = result.rows[0];
+
+    return {
+      idNotificacion: row.idnotificacion,
+      titulo: row.titulo,
+      contenido: row.contenido,
+      fecha: row.fecha,
+      idUsuarioEmisor: row.idusuario_emisor,
+    };
   }
 
   async agregarDestinatario(idNotificacion, idUsuario) {
@@ -42,7 +50,13 @@ class NotificacionRepository {
       [idUsuario]
     );
 
-    return result.rows;
+    return result.rows.map((row) => ({
+      idNotificacion: row.idnotificacion,
+      titulo: row.titulo,
+      contenido: row.contenido,
+      fecha: row.fecha,
+      idUsuarioEmisor: row.idusuario_emisor,
+    }));
   }
 }
 
