@@ -1,36 +1,48 @@
 import { pool } from "../config/database.js";
-import Notificacion from "../models/Notificacion.js";
 
 class NotificacionRepository {
-  async createNotificacion({ titulo, contenido, idUsuarioEmisor }) {
+  async crearNotificacion({ titulo, contenido, idUsuarioEmisor }) {
     const result = await pool.query(
-      `INSERT INTO notificaciones(titulo, contenido, fecha, idusuario_emisor)
-             VALUES ($1, $2, NOW(), $3)
-             RETURNING *`,
+      `INSERT INTO notificaciones (titulo, contenido, fecha, idusuario_emisor)
+       VALUES ($1, $2, NOW(), $3)
+       RETURNING *`,
       [titulo, contenido, idUsuarioEmisor]
     );
 
-    return new Notificacion(result.rows[0]);
+    return result.rows[0];
   }
 
-  async addDestinatario(idNotificacion, idUsuario) {
+  async agregarDestinatario(idNotificacion, idUsuario) {
     await pool.query(
-      `INSERT INTO destinatarios(idusuario, idnotificacion)
-             VALUES ($1, $2)`,
+      `INSERT INTO destinatarios (idusuario, idnotificacion)
+       VALUES ($1, $2)`,
       [idUsuario, idNotificacion]
     );
   }
 
-  async getNotificacionesRecibidas(idUsuario) {
+  async getResponsablesProyecto(idProyecto) {
     const result = await pool.query(
-      `SELECT n.* 
-             FROM destinatarios d
-             JOIN notificaciones n ON n.idnotificacion = d.idnotificacion
-             WHERE d.idusuario = $1`,
+      `SELECT idusuario_po, idusuario_srm, nombreproyecto
+       FROM proyectos
+       WHERE idproyecto = $1`,
+      [idProyecto]
+    );
+
+    if (result.rowCount === 0) return null;
+    return result.rows[0];
+  }
+
+  async getNotificacionesUsuario(idUsuario) {
+    const result = await pool.query(
+      `SELECT n.idnotificacion, n.titulo, n.contenido, n.fecha, n.idusuario_emisor
+     FROM notificaciones n
+     JOIN destinatarios d ON d.idnotificacion = n.idnotificacion
+     WHERE d.idusuario = $1
+     ORDER BY n.fecha DESC`,
       [idUsuario]
     );
 
-    return result.rows.map((row) => new Notificacion(row));
+    return result.rows;
   }
 }
 

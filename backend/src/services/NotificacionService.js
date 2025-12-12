@@ -99,13 +99,14 @@ class NotificacionService {
     };
   }
 
-  async obtenerNotificacionesRecibidas(idUsuario) {
+  async obtenerNotificaciones(idUsuario) {
     const usuario = await UsuarioRepository.findById(idUsuario);
-    if (!usuario) {
-      throw new Error("Usuario no encontrado.");
-    }
+    if (!usuario) throw new Error("El usuario no existe.");
 
-    return await NotificacionRepository.getNotificacionesRecibidas(idUsuario);
+    const notificaciones =
+      await NotificacionRepository.getNotificacionesUsuario(idUsuario);
+
+    return notificaciones;
   }
 }
 

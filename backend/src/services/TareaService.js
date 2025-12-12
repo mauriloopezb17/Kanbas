@@ -3,6 +3,7 @@ import UsuarioRepository from "../repositories/UsuarioRepository.js";
 import EquipoRepository from "../repositories/EquipoRepository.js";
 import IntegrantesRepository from "../repositories/IntegrantesRepository.js";
 import ComentarioRepository from "../repositories/ComentarioRepository.js";
+import NotificacionRepository from "../repositories/NotificacionRepository.js";
 
 class TareaService {
   async crearTarea({
@@ -238,14 +239,111 @@ class TareaService {
 
     const estadosPermitidos = ["TODO", "IN_PROGRESS", "REVIEW", "DONE"];
     if (!estadosPermitidos.includes(nuevoEstado)) {
-      throw new Error("Estado inválido.");
+      throw new Error("Estado no válido.");
     }
 
-    const tarea = await TareaRepository.updateEstado(idTarea, nuevoEstado);
+    const tareaActual = await TareaRepository.findById(idTarea);
+    if (!tareaActual) throw new Error("La tarea no existe.");
+    if (tareaActual.idProyecto !== idProyecto) {
+      throw new Error("La tarea no pertenece a este proyecto.");
+    }
+
+    const estadoAnterior = tareaActual.estado;
+    if (estadoAnterior === nuevoEstado) {
+      return {
+        mensaje: "La tarea ya se encuentra en ese estado.",
+        tarea: tareaActual,
+      };
+    }
+
+    const transicion = `${estadoAnterior}->${nuevoEstado}`;
+
+    const esIntegrante = rol === "Integrante";
+    const esSRMoPO = ["SRM", "Product Owner", "PO"].includes(rol);
+
+    const usuariosAsignados = await TareaRepository.getUsuariosAsignados(
+      idTarea
+    );
+    const estaAsignado = usuariosAsignados.some(
+      (u) => u.idusuario === idUsuarioSolicitante
+    );
+
+    switch (transicion) {
+      case "TODO->IN_PROGRESS":
+      case "IN_PROGRESS->REVIEW":
+        if (!esIntegrante) {
+          throw new Error("Solo un integrante puede cambiar este estado.");
+        }
+        if (!estaAsignado) {
+          throw new Error(
+            "Solo integrantes asignados a la tarea pueden moverla de columna."
+          );
+        }
+        break;
+
+      case "REVIEW->DONE":
+      case "REVIEW->IN_PROGRESS":
+        if (!esSRMoPO) {
+          throw new Error("Solo el SRM o el PO pueden cambiar este estado.");
+        }
+        break;
+
+      default:
+        throw new Error("Transición de estado no permitida.");
+    }
+
+    const tareaActualizada = await TareaRepository.updateEstado(
+      idTarea,
+      nuevoEstado
+    );
+
+    if (nuevoEstado === "REVIEW") {
+      const proyecto = await NotificacionRepository.getResponsablesProyecto(
+        idProyecto
+      );
+
+      if (proyecto) {
+        const destinatarios = [];
+        if (proyecto.idusuario_srm) destinatarios.push(proyecto.idusuario_srm);
+        if (proyecto.idusuario_po) destinatarios.push(proyecto.idusuario_po);
+
+        if (destinatarios.length > 0) {
+          const notificacion = await NotificacionRepository.crearNotificacion({
+            titulo: `Tarea "${tareaActualizada.titulo}" lista para revisión`,
+            contenido: `La tarea "${tareaActualizada.titulo}" del proyecto "${proyecto.nombreproyecto}" ha cambiado a estado REVIEW.`,
+            idUsuarioEmisor: idUsuarioSolicitante,
+          });
+
+          for (const idUsuario of destinatarios) {
+            await NotificacionRepository.agregarDestinatario(
+              notificacion.idnotificacion,
+              idUsuario
+            );
+          }
+        }
+      }
+    }
+
+    if (nuevoEstado === "DONE") {
+      if (usuariosAsignados.length > 0) {
+        const notificacion = await NotificacionRepository.crearNotificacion({
+          titulo: `Tarea "${tareaActualizada.titulo}" completada`,
+          contenido: `La tarea "${tareaActualizada.titulo}" ha sido marcada como DONE.`,
+          idUsuarioEmisor: idUsuarioSolicitante,
+        });
+
+        for (const usuario of usuariosAsignados) {
+          await NotificacionRepository.agregarDestinatario(
+            notificacion.idnotificacion,
+            usuario.idusuario
+          );
+        }
+      }
+    }
 
     return {
       mensaje: "Estado actualizado correctamente.",
-      tarea,
+      tarea: tareaActualizada,
     };
   }
 

@@ -93,4 +93,6 @@ router.post(
   TareaController.autoasignarTarea
 );
 
+router.patch("/:idTarea/estado", authMiddleware, TareaController.cambiarEstado);
+
 export default router;

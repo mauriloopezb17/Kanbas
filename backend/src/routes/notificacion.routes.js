@@ -27,4 +27,6 @@ router.get(
   NotificacionController.obtenerNotificacionesEnviadas
 );
 
+router.get("/", authMiddleware, NotificacionController.obtenerNotificaciones);
+
 export default router;

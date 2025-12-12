@@ -45,6 +45,18 @@ class NotificacionController {
       return res.status(400).json({ error: error.message });
     }
   }
+
+  async obtenerNotificaciones(req, res) {
+    try {
+      const idUsuario = req.user.idUsuario;
+
+      const data = await NotificacionService.obtenerNotificaciones(idUsuario);
+
+      return res.status(200).json(data);
+    } catch (error) {
+      return res.status(400).json({ error: error.message });
+    }
+  }
 }
 
 export default new NotificacionController();

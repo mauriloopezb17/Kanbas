@@ -4,7 +4,7 @@ POST http://localhost:3000/api/auth/login
 Content-Type: application/json
 
 {
-    "identifier": "cobine",
+    "identifier": "Puppett",
     "password": "admin"
 }
 
@@ -183,3 +183,46 @@ Authorization: Bearer {{token}}
 DELETE http://localhost:3000/api/comentarios/eliminar/3
 Authorization: Bearer {{token}}
 
+### Mover tarea a IN_PROGRESS
+PATCH http://localhost:3000/api/tareas/4/estado
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "idProyecto": 2,
+  "nuevoEstado": "IN_PROGRESS"
+}
+
+### Mover tarea a REVIEW
+PATCH http://localhost:3000/api/tareas/4/estado
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "idProyecto": 2,
+  "nuevoEstado": "REVIEW"
+}
+
+### Aprobar tarea REVIEW a DONE
+PATCH http://localhost:3000/api/tareas/4/estado
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "idProyecto": 2,
+  "nuevoEstado": "DONE"
+}
+
+### Rechazar tarea REVIEW a IN_PROGRESS
+PATCH http://localhost:3000/api/tareas/4/estado
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "idProyecto": 2,
+  "nuevoEstado": "IN_PROGRESS"
+}
+
+### obtener notificaciones
+GET http://localhost:3000/api/notificaciones
+Authorization: Bearer {{token}}
