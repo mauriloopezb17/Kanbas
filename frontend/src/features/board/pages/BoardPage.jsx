@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import MainLayout from '../../../layouts/MainLayout';
+import ProjectReportModal from '../../../components/ProjectReportModal';
 import BoardColumn from '../components/BoardColumn';
 import TaskCard from '../components/TaskCard';
 import CreateTaskModal from '../../tasks/components/CreateTaskModal';
@@ -24,7 +25,9 @@ import { createComment } from '../../tasks/services/commentsService';
 
 const BoardPage = ({ project, user, onBack, onLogout }) => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
+
   const [deletingTask, setDeletingTask] = useState(null);
   
   // cosas de los comentarios
@@ -676,6 +679,7 @@ const BoardPage = ({ project, user, onBack, onLogout }) => {
       projectName={project?.name || "Proyecto Ejemplo"} 
       onLogoClick={onBack}
       canGenerateReport={permissions.canGenerateReport}
+      onGenerateReport={() => setShowReportModal(true)}
       onLogout={onLogout}
       user={user}
     >
@@ -772,6 +776,13 @@ const BoardPage = ({ project, user, onBack, onLogout }) => {
         onClose={() => setIsCommentsModalOpen(false)}
         task={commentingTask}
         onAddComment={handleAddComment}
+      />
+
+      <ProjectReportModal 
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        project={project}
+        user={user}
       />
     </MainLayout>
   );

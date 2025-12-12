@@ -15,7 +15,7 @@ class ReporteRendimientoService {
       throw new Error("No tienes acceso a este proyecto.");
     }
 
-    if (rol !== "Product Owner" && rol !== "SDM") {
+    if (rol !== "Product Owner" && rol !== "SDM" && rol !== "SRM") {
       throw new Error("No tienes permisos para generar este reporte.");
     }
 
@@ -29,7 +29,7 @@ class ReporteRendimientoService {
     const equiposConIntegrantes = [];
     for (const eq of equipos) {
       const integrantes = await IntegrantesRepository.getIntegrantes(
-        eq.idequipo
+        eq.idEquipo
       );
 
       equiposConIntegrantes.push({
