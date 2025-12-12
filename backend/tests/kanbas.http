@@ -4,7 +4,7 @@ POST http://localhost:3000/api/auth/login
 Content-Type: application/json
 
 {
-    "identifier": "Puppett",
+    "identifier": "SergioA2",
     "password": "admin"
 }
 
@@ -225,4 +225,8 @@ Content-Type: application/json
 
 ### obtener notificaciones
 GET http://localhost:3000/api/notificaciones
+Authorization: Bearer {{token}}
+
+### REPORTE DE RENDIMIENTO
+GET http://localhost:3000/api/reportes/rendimiento/1
 Authorization: Bearer {{token}}

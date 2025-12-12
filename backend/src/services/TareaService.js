@@ -292,10 +292,14 @@ class TareaService {
         throw new Error("Transición de estado no permitida.");
     }
 
-    const tareaActualizada = await TareaRepository.updateEstado(
+    let tareaActualizada = await TareaRepository.updateEstado(
       idTarea,
       nuevoEstado
     );
+
+    if (nuevoEstado === "DONE") {
+      tareaActualizada = await TareaRepository.actualizarFechaEntrega(idTarea);
+    }
 
     if (nuevoEstado === "REVIEW") {
       const proyecto = await NotificacionRepository.getResponsablesProyecto(

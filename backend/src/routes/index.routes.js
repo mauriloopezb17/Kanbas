@@ -9,6 +9,7 @@ import tareaRoutes from "./tarea.routes.js";
 import comentarioRoutes from "./comentario.routes.js";
 import notificacionRoutes from "./notificacion.routes.js";
 import mensajeRoutes from "./mensaje.routes.js";
+import reporteRendimientoRoutes from "./reporteRendimiento.routes.js";
 
 import authMiddleware from "../middlewares/authMiddleware.js";
 
@@ -24,5 +25,6 @@ router.use("/tareas", authMiddleware, tareaRoutes);
 router.use("/comentarios", authMiddleware, comentarioRoutes);
 router.use("/notificaciones", authMiddleware, notificacionRoutes);
 router.use("/mensajes", authMiddleware, mensajeRoutes);
+router.use("/reportes", reporteRendimientoRoutes);
 
 export default router;

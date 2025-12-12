@@ -151,6 +151,18 @@ class TareaRepository {
       client.release();
     }
   }
+
+  async actualizarFechaEntrega(idTarea) {
+    const result = await pool.query(
+      `UPDATE tareas 
+     SET fechaentrega = NOW()
+     WHERE idtarea = $1
+     RETURNING *`,
+      [idTarea]
+    );
+
+    return new Tarea(result.rows[0]);
+  }
 }
 
 export default new TareaRepository();
