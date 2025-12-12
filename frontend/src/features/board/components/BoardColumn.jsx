@@ -3,7 +3,7 @@ import TaskCard from './TaskCard';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
-const BoardColumn = ({ title, tasks, color, onAddTask, onEditTask, onDeleteTask, onCommentsTask, id, onAssignSelf }) => {
+const BoardColumn = ({ title, tasks, color, onAddTask, onEditTask, onDeleteTask, onCommentsTask, id, onAssignSelf, currentUser }) => {
   const [expandedTaskId, setExpandedTaskId] = useState(null);
   
   const { setNodeRef } = useDroppable({
@@ -14,6 +14,18 @@ const BoardColumn = ({ title, tasks, color, onAddTask, onEditTask, onDeleteTask,
 
   const handleToggleTask = (taskId) => {
     setExpandedTaskId(prevId => (prevId === taskId ? null : taskId));
+  };
+  
+  const checkIsAssigned = (task) => {
+      if (!currentUser) return false;
+      // Verificamos por ID si es posible (mas seguro)
+      const currentId = Number(currentUser.idUsuario || currentUser.id);
+      if (currentId && task.members && task.members.some(m => Number(m.id) === currentId)) {
+          return true;
+      }
+      
+      const userName = `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim();
+      return task.members.some(m => m.name === userName || m.name === currentUser.usuario);
   };
 
   return (
@@ -27,7 +39,7 @@ const BoardColumn = ({ title, tasks, color, onAddTask, onEditTask, onDeleteTask,
     >
       <h2 className="text-3xl font-normal text-black mb-4 pl-2 font-sans text-center">{title}</h2>
       
-      <div className="flex-1 overflow-y-auto pr-2 pb-4 scrollbar-hide space-y-4">
+      <div className="flex-1 overflow-y-auto px-2 pt-4 pb-4 scrollbar-hide space-y-4">
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           {tasks.map((task) => (
             <TaskCard
@@ -41,6 +53,7 @@ const BoardColumn = ({ title, tasks, color, onAddTask, onEditTask, onDeleteTask,
               onComments={onCommentsTask}
               columnId={id}
               onAssignSelf={onAssignSelf}
+              isAssigned={checkIsAssigned(task)}
             />
           ))}
         </SortableContext>

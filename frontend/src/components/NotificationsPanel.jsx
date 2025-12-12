@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import NewMessageModal from './NewMessageModal';
 import { getInboxMessages } from '../features/messages/services/messagesService';
+import { getNotifications } from '../features/notifications/services/notificationsService';
 
 const NotificationsPanel = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState('proyecto');
@@ -10,6 +11,9 @@ const NotificationsPanel = ({ isOpen, onClose }) => {
 
   const [messages, setMessages] = useState([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  
+  const [notifications, setNotifications] = useState([]);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
 
   React.useEffect(() => {
     if (isOpen) {
@@ -37,7 +41,22 @@ const NotificationsPanel = ({ isOpen, onClose }) => {
           }
       };
       
+      const fetchNotifications = async () => {
+          if (isOpen && activeTab === 'proyecto') {
+              setLoadingNotifications(true);
+              try {
+                  const data = await getNotifications();
+                  setNotifications(data);
+              } catch (error) {
+                  console.error("Error fetching notifications:", error);
+              } finally {
+                  setLoadingNotifications(false);
+              }
+          }
+      };
+      
       fetchMessages();
+      fetchNotifications();
   }, [isOpen, activeTab]);
 
   if (!isOpen && !showPanel) return null;
@@ -101,37 +120,22 @@ const NotificationsPanel = ({ isOpen, onClose }) => {
           
           {activeTab === 'proyecto' && (
             <>
-              {/* Notification Item: Deadline Warning */}
-              <div className="bg-[#cbd5e1] rounded-3xl p-5 relative">
-                <p className="text-gray-800 text-sm leading-snug">
-                  Queda <span className="text-red-500 font-bold">menos del 25%</span> del tiempo estimado para la <span className="text-kanbas-blue font-bold">Tarea 3</span>
-                </p>
-                <p className="text-gray-500 text-xs text-right mt-2">11/30/25 10:49 PM</p>
-              </div>
-
-              {/* Notification Item: Comment */}
-              <div className="bg-[#cbd5e1] rounded-3xl p-5 relative">
-                <p className="text-gray-800 text-sm leading-snug">
-                  Recibiste un comentario en la <span className="text-kanbas-blue font-bold">Tarea 3</span> del <span className="text-kanbas-blue font-bold">Proyecto Ejemplo</span>
-                </p>
-                <p className="text-gray-500 text-xs text-right mt-2">11/30/25 11:00 PM</p>
-              </div>
-
-              {/* Notification Item: New Tasks */}
-              <div className="bg-[#cbd5e1] rounded-3xl p-5 relative">
-                <p className="text-gray-800 text-sm leading-snug">
-                  Tienes nuevas tareas en el proyecto <span className="text-kanbas-blue font-bold">Angry Birds</span>
-                </p>
-                <p className="text-gray-500 text-xs text-right mt-2">11/30/25 10:49 PM</p>
-              </div>
-
-              {/* Notification Item: Assignment */}
-              <div className="bg-[#cbd5e1] rounded-3xl p-5 relative">
-                <p className="text-gray-800 text-sm leading-snug">
-                  Fuiste Asignado al equipo <span className="text-kanbas-blue font-bold">Dev Movil</span> del proyecto <span className="text-kanbas-blue font-bold">Angry Birds</span>
-                </p>
-                <p className="text-gray-500 text-xs text-right mt-2">11/30/25 10:45 PM</p>
-              </div>
+               {loadingNotifications && <p className="text-gray-500 text-center text-sm">Cargando...</p>}
+               {!loadingNotifications && notifications.length === 0 && (
+                 <p className="text-gray-500 text-center text-sm">No hay notificaciones.</p>
+               )}
+               
+               {!loadingNotifications && notifications.map(notif => (
+                  <div key={notif.idnotificacion} className="bg-[#cbd5e1] rounded-3xl p-5 relative animate-fade-in">
+                    <p className="text-gray-800 text-sm leading-snug">
+                       <span className="font-bold block mb-1">{notif.titulo}</span>
+                       {notif.contenido}
+                    </p>
+                    <p className="text-gray-500 text-xs text-right mt-2">
+                        {new Date(notif.fecha).toLocaleString()}
+                    </p>
+                  </div>
+               ))}
             </>
           )}
 

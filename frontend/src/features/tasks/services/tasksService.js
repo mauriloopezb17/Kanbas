@@ -94,3 +94,18 @@ export const autoAssignTask = async (taskId, projectId) => {
     }
     return data;
 };
+
+export const updateTaskStatus = async (taskId, projectId, newStatus) => {
+    // PATCH /api/tareas/:taskId/estado
+    const response = await fetch(`${API_URL}/tareas/${taskId}/estado`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ idProyecto: projectId, nuevoEstado: newStatus })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data.error || data.mensaje || 'Error actualizando estado');
+    }
+    return data;
+};
