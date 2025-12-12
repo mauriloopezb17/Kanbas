@@ -9,6 +9,7 @@ export default class Tarea {
 
     this.fechaCreacion = row.fechacreacion ?? row.fechaCreacion;
     this.fechaLimite = row.fechalimite ?? row.fechaLimite;
+    this.fechaEntrega = row.fechaentrega ?? row.fechaEntrega;
 
     this.estado = row.estado;
     this.responsable = row.responsable || null;

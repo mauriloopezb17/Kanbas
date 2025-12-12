@@ -3,7 +3,7 @@ import logoWhite from '../assets/logo_mono.png';
 import NotificationsPanel from '../components/NotificationsPanel';
 import ProfilePanel from '../components/ProfilePanel';
 
-const MainLayout = ({ children, isBoardView = false, projectName = '', onLogoClick, canGenerateReport = false, onLogout, user }) => {
+const MainLayout = ({ children, isBoardView = false, projectName = '', onLogoClick, canGenerateReport = false, onGenerateReport, onLogout, user }) => {
   const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);
 
@@ -38,7 +38,10 @@ const MainLayout = ({ children, isBoardView = false, projectName = '', onLogoCli
            {isBoardView && (
              <>
                {canGenerateReport && (
-                 <button className="bg-white text-kanbas-blue px-4 py-1 rounded-full font-bold text-sm shadow-sm hover:bg-gray-100 transition">
+                 <button 
+                    onClick={onGenerateReport}
+                    className="bg-white text-kanbas-blue px-4 py-1 rounded-full font-bold text-sm shadow-sm hover:bg-gray-100 transition"
+                 >
                    Generar Reporte
                  </button>
                )}
