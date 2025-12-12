@@ -113,8 +113,32 @@ class TareaService {
     return await TareaRepository.getTareasDeUsuario(idUsuario);
   }
 
-  async obtenerTareasDelProyecto(idProyecto) {
-    const tareas = await TareaRepository.findByProyecto(idProyecto);
+  async obtenerTareasDelProyecto(idProyecto, idUsuarioSolicitante) {
+    let tareas = await TareaRepository.findByProyecto(idProyecto);
+
+    // Filter logic based on role
+    if (idUsuarioSolicitante) {
+      const rol = await UsuarioRepository.getUserRoleInProject(
+        idUsuarioSolicitante,
+        idProyecto
+      );
+
+      const isPrivileged = ["SRM", "SDM", "Product Owner", "PO"].includes(rol);
+
+      if (!isPrivileged && rol) {
+        const equipoUsuario =
+          await IntegrantesRepository.findEquipoByUsuarioAndProyecto(
+            idUsuarioSolicitante,
+            idProyecto
+          );
+
+        if (equipoUsuario) {
+          tareas = tareas.filter((t) => t.idEquipo === equipoUsuario.idequipo);
+        } else {
+          tareas = [];
+        }
+      }
+    }
 
     const result = {
       todo: [],
