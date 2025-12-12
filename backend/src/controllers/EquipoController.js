@@ -58,17 +58,14 @@ class EquipoController {
 
   async eliminarEquipo(req, res) {
     try {
-      const { idEquipo, idProyecto } = req.params;
+      const { idEquipo } = req.params;
 
-      const idUsuarioSolicitante = req.user.idUsuario;
+      const eliminado = await EquipoService.eliminarEquipo(idEquipo);
 
-      const data = await EquipoService.eliminarEquipo(
-        parseInt(idEquipo),
-        parseInt(idProyecto),
-        idUsuarioSolicitante
-      );
-
-      return res.status(200).json(data);
+      return res.status(200).json({
+        mensaje: "Equipo eliminado correctamente.",
+        equipo: eliminado,
+      });
     } catch (error) {
       return res.status(400).json({ error: error.message });
     }
@@ -110,6 +107,35 @@ class EquipoController {
       const integrantes = await IntegrantesRepository.getIntegrantes(idEquipo);
 
       return res.status(200).json(integrantes);
+    } catch (error) {
+      return res.status(400).json({ error: error.message });
+    }
+  }
+
+  async eliminarEquipo(req, res) {
+    try {
+      const { idEquipo } = req.params;
+
+      const eliminado = await EquipoService.eliminarEquipo(idEquipo);
+
+      return res.status(200).json({
+        mensaje: "Equipo eliminado correctamente.",
+        eliminado,
+      });
+    } catch (error) {
+      return res.status(400).json({ error: error.message });
+    }
+  }
+
+  async eliminarIntegrante(req, res) {
+    try {
+      const { idIntegrante } = req.params;
+
+      await EquipoService.eliminarIntegrante(idIntegrante);
+
+      return res.status(200).json({
+        mensaje: "Integrante eliminado correctamente.",
+      });
     } catch (error) {
       return res.status(400).json({ error: error.message });
     }

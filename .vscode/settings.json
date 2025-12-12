@@ -6,8 +6,8 @@
       "server": "localhost",
       "port": 5432,
       "driver": "PostgreSQL",
-      "name": "kanbas",
-      "database": "kanbas",
+      "name": "Kanbas",
+      "database": "Kanbas",
       "username": "postgres"
     }
   ]

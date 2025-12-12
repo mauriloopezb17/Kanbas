@@ -29,6 +29,17 @@ class IntegrantesRepository {
 
     return result.rows;
   }
+
+  async eliminarIntegrante(idIntegrante) {
+    const result = await pool.query(
+      `DELETE FROM integrantes
+     WHERE idintegrante = $1
+     RETURNING *`,
+      [idIntegrante]
+    );
+
+    return result.rows[0];
+  }
 }
 
 export default new IntegrantesRepository();

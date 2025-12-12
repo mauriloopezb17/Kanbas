@@ -50,6 +50,23 @@ class MensajeRepository {
       [idMensaje, idUsuario]
     );
   }
+
+  async obtenerInbox(idUsuario) {
+    const result = await pool.query(
+      `SELECT 
+        m.idmensaje,
+        m.contenido,
+        m.fecha,
+        m.idusuario_emisor
+     FROM mensajes m
+     JOIN mensajes_usuarios mu ON mu.idmensaje = m.idmensaje
+     WHERE mu.idusuarioreceptor = $1
+     ORDER BY m.fecha DESC`,
+      [idUsuario]
+    );
+
+    return result.rows;
+  }
 }
 
 export default new MensajeRepository();

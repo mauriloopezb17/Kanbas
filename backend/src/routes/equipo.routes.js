@@ -58,4 +58,12 @@ router.get(
   EquipoController.getIntegrantesByEquipo
 );
 
+router.delete("/:idEquipo", authMiddleware, EquipoController.eliminarEquipo);
+
+router.delete(
+  "/:idEquipo/integrantes/:idIntegrante",
+  authMiddleware,
+  EquipoController.eliminarIntegrante
+);
+
 export default router;

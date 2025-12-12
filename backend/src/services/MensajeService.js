@@ -98,6 +98,10 @@ class MensajeService {
 
     return mensaje;
   }
+
+  async obtenerInbox(idUsuario) {
+    return await MensajeRepository.obtenerInbox(idUsuario);
+  }
 }
 
 export default new MensajeService();

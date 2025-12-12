@@ -101,6 +101,10 @@ class UsuarioService {
   async getAllUsuarios() {
     return await UsuarioRepository.findAll();
   }
+
+  async obtenerUsuarioPorId(idUsuario) {
+    return await UsuarioRepository.findById(idUsuario);
+  }
 }
 
 export default new UsuarioService();

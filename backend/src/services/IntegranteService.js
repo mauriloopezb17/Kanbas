@@ -114,6 +114,18 @@ class IntegranteService {
 
     return null;
   }
+
+  async eliminarIntegrante(idIntegrante) {
+    const eliminado = await IntegrantesRepository.eliminarIntegrante(
+      idIntegrante
+    );
+
+    if (!eliminado) {
+      throw new Error("No existe un integrante con ese ID.");
+    }
+
+    return eliminado;
+  }
 }
 
 export default new IntegranteService();

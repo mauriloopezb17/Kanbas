@@ -68,6 +68,23 @@ class IntegranteController {
       return res.status(400).json({ error: error.message });
     }
   }
+
+  async eliminarIntegrante(req, res) {
+    try {
+      const { idIntegrante } = req.params;
+
+      const eliminado = await IntegrantesService.eliminarIntegrante(
+        idIntegrante
+      );
+
+      return res.status(200).json({
+        mensaje: "Integrante eliminado correctamente.",
+        eliminado,
+      });
+    } catch (error) {
+      return res.status(400).json({ error: error.message });
+    }
+  }
 }
 
 export default new IntegranteController();

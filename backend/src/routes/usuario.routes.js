@@ -24,4 +24,10 @@ router.get("/perfil", authMiddleware, UsuarioController.obtenerPerfil);
 
 router.get("/", authMiddleware, UsuarioController.getAllUsuarios);
 
+router.get(
+  "/:idUsuario",
+  authMiddleware,
+  UsuarioController.obtenerUsuarioPorId
+);
+
 export default router;

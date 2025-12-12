@@ -100,6 +100,28 @@ class EquipoService {
 
     return await IntegrantesRepository.getIntegrantes(idEquipo);
   }
+
+  async eliminarIntegrante(idIntegrante) {
+    const eliminado = await IntegrantesRepository.eliminarIntegrante(
+      idIntegrante
+    );
+
+    if (!eliminado) {
+      throw new Error("No existe un integrante con ese ID.");
+    }
+
+    return eliminado;
+  }
+
+  async eliminarEquipo(idEquipo) {
+    const eliminado = await EquipoRepository.eliminarEquipo(idEquipo);
+
+    if (!eliminado) {
+      throw new Error("No existe un equipo con ese ID.");
+    }
+
+    return eliminado;
+  }
 }
 
 export default new EquipoService();

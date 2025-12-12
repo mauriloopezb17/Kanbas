@@ -60,6 +60,61 @@ class ProyectoRepository {
 
     return result.rows.map((row) => new Proyecto(row));
   }
+
+  async obtenerRolesDelProyecto(idProyecto) {
+    const result = await pool.query(
+      `SELECT 
+        u.idusuario,
+        u.nombre,
+        u.apellido,
+        'PO' AS rol
+      FROM proyectos p
+      JOIN usuarios u ON u.idusuario = p.idusuario_po
+      WHERE p.idproyecto = $1
+
+      UNION ALL
+
+      SELECT 
+        u.idusuario,
+        u.nombre,
+        u.apellido,
+        'SRM' AS rol
+      FROM proyectos p
+      JOIN usuarios u ON u.idusuario = p.idusuario_srm
+      WHERE p.idproyecto = $1
+
+      UNION ALL
+
+      SELECT 
+        u.idusuario,
+        u.nombre,
+        u.apellido,
+        'SDM' AS rol
+      FROM proyectos p
+      JOIN usuarios u ON u.idusuario = p.idusuario_sdm
+      WHERE p.idproyecto = $1;`,
+      [idProyecto]
+    );
+
+    return result.rows;
+  }
+
+  async obtenerIntegrantesDelProyecto(idProyecto) {
+    const result = await pool.query(
+      `SELECT 
+        u.idusuario,
+        u.nombre,
+        u.apellido,
+        'Integrante' as rol
+     FROM equipos e
+     JOIN integrantes i ON i.idequipo = e.idequipo
+     JOIN usuarios u ON u.idusuario = i.idusuario
+     WHERE e.idproyecto = $1`,
+      [idProyecto]
+    );
+
+    return result.rows;
+  }
 }
 
 export default new ProyectoRepository();

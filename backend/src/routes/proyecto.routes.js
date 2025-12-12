@@ -9,13 +9,6 @@ const router = Router();
 
 router.post("/crear", authMiddleware, ProyectoController.crearProyecto);
 
-router.get(
-  "/:idProyecto",
-  authMiddleware,
-  projectMiddleware,
-  ProyectoController.obtenerProyecto
-);
-
 router.get("/", authMiddleware, ProyectoController.obtenerProyectosDeUsuario);
 
 router.get(
@@ -67,6 +60,19 @@ router.put(
   projectMiddleware,
   roleMiddleware(["SRM"]),
   ProyectoController.asignarSDM
+);
+
+router.get(
+  "/:idProyecto/usuarios",
+  authMiddleware,
+  ProyectoController.obtenerUsuariosDelProyecto
+);
+
+router.get(
+  "/:idProyecto",
+  authMiddleware,
+  projectMiddleware,
+  ProyectoController.obtenerProyecto
 );
 
 export default router;

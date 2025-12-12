@@ -162,6 +162,20 @@ class ProyectoController {
       return res.status(400).json({ error: error.message });
     }
   }
+
+  async obtenerUsuariosDelProyecto(req, res) {
+    try {
+      const { idProyecto } = req.params;
+
+      const usuarios = await ProyectoService.obtenerUsuariosDelProyecto(
+        idProyecto
+      );
+
+      return res.status(200).json(usuarios);
+    } catch (error) {
+      return res.status(400).json({ error: error.message });
+    }
+  }
 }
 
 export default new ProyectoController();

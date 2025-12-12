@@ -44,6 +44,18 @@ class MensajeController {
       return res.status(400).json({ error: error.message });
     }
   }
+
+  async obtenerInbox(req, res) {
+    try {
+      const idUsuario = req.user.idUsuario;
+
+      const mensajes = await MensajeService.obtenerInbox(idUsuario);
+
+      return res.status(200).json(mensajes);
+    } catch (error) {
+      return res.status(400).json({ error: error.message });
+    }
+  }
 }
 
 export default new MensajeController();

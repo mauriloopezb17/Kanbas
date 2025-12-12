@@ -20,4 +20,6 @@ router.get(
   MensajeController.obtenerMensajesEnviados
 );
 
+router.get("/inbox", authMiddleware, MensajeController.obtenerInbox);
+
 export default router;

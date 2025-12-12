@@ -127,3 +127,24 @@ Content-Type: application/json
   "receptores": [2, "SergioA2", "puppett@gmail.com"],
   "contenido": "Hola chicos, revisen esta prueba."
 }
+
+
+### Obtener todos los mensaje (inbox)
+GET http://localhost:3000/api/mensajes/inbox
+Authorization: Bearer {{token}}
+
+### Obtener perfil de un usuario
+GET http://localhost:3000/api/usuarios/2
+Authorization: Bearer {{token}}
+
+### Obtener todos los usuarios del proyecto
+GET http://localhost:3000/api/proyectos/1/usuarios
+Authorization: Bearer {{token}}
+
+### Eliminar integrante de un equipo
+DELETE http://localhost:3000/api/equipos/1/integrantes/1
+Authorization: Bearer {{token}}
+
+### Eliminar equipo por id con sus integrantes
+DELETE http://localhost:3000/api/equipos/2
+Authorization: Bearer {{token}}

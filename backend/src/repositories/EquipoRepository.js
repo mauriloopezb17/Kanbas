@@ -21,6 +21,47 @@ class EquipoRepository {
 
     return result.rows.map((row) => new Equipo(row));
   }
+
+  async eliminarIntegrante(idIntegrante) {
+    const result = await pool.query(
+      `DELETE FROM integrantes WHERE idintegrante = $1 RETURNING *`,
+      [idIntegrante]
+    );
+
+    return result.rows[0];
+  }
+
+  async eliminarEquipo(idEquipo) {
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      // 1. Eliminar integrantes del equipo
+      await client.query(
+        `DELETE FROM integrantes
+       WHERE idequipo = $1`,
+        [idEquipo]
+      );
+
+      // 2. Eliminar el equipo
+      const result = await client.query(
+        `DELETE FROM equipos
+       WHERE idequipo = $1
+       RETURNING *`,
+        [idEquipo]
+      );
+
+      await client.query("COMMIT");
+
+      return result.rows[0];
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
 }
 
 export default new EquipoRepository();

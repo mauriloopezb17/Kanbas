@@ -163,6 +163,27 @@ class ProyectoService {
       equipos,
     };
   }
+
+  async obtenerUsuariosDelProyecto(idProyecto) {
+    const roles = await ProyectoRepository.obtenerRolesDelProyecto(idProyecto);
+    const integrantes = await ProyectoRepository.obtenerIntegrantesDelProyecto(
+      idProyecto
+    );
+
+    const todos = [...roles, ...integrantes];
+
+    const unicos = [];
+    const ids = new Set();
+
+    for (const u of todos) {
+      if (!ids.has(u.idusuario)) {
+        ids.add(u.idusuario);
+        unicos.push(u);
+      }
+    }
+
+    return unicos;
+  }
 }
 
 export default new ProyectoService();
