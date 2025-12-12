@@ -66,7 +66,8 @@ class TareaController {
     try {
       const { idProyecto } = req.params;
 
-      const tareas = await TareaService.obtenerTareasDelProyecto(idProyecto);
+      const idUsuarioSolicitante = req.user.idUsuario;
+      const tareas = await TareaService.obtenerTareasDelProyecto(idProyecto, idUsuarioSolicitante);
 
       return res.status(200).json(tareas);
     } catch (error) {

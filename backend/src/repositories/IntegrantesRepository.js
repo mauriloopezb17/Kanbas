@@ -40,6 +40,18 @@ class IntegrantesRepository {
 
     return result.rows[0];
   }
+  async findEquipoByUsuarioAndProyecto(idUsuario, idProyecto) {
+    const result = await pool.query(
+      `SELECT i.idequipo 
+       FROM integrantes i
+       JOIN equipos e ON e.idequipo = i.idequipo
+       WHERE i.idusuario = $1 AND e.idproyecto = $2`,
+      [idUsuario, idProyecto]
+    );
+
+    if (result.rowCount === 0) return null;
+    return result.rows[0];
+  }
 }
 
 export default new IntegrantesRepository();

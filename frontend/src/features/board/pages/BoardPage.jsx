@@ -19,7 +19,8 @@ import {
 } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 
-import { getTasksByProject, deleteTask, autoAssignTask } from '../../tasks/services/tasksService';
+import { getTasksByProject, deleteTask, autoAssignTask, updateTaskStatus } from '../../tasks/services/tasksService';
+import { createComment } from '../../tasks/services/commentsService';
 
 const BoardPage = ({ project, user, onBack, onLogout }) => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -53,11 +54,15 @@ const BoardPage = ({ project, user, onBack, onLogout }) => {
   /*
    * PERMISSIONS SYSTEM
    */
+  /*
+   * PERMISSIONS SYSTEM
+   */
   const userRole = React.useMemo(() => {
      if (!user || !project) return 'TEAM_MEMBER';
-     if (project.idSRM === user.idUsuario) return 'SRM';
-     if (project.idPO === user.idUsuario) return 'PO';
-     if (project.idSDM === user.idUsuario) return 'SDM';
+     const uid = Number(user.idUsuario);
+     if (Number(project.idSRM) === uid) return 'SRM';
+     if (Number(project.idPO) === uid) return 'PO';
+     if (Number(project.idSDM) === uid) return 'SDM';
      return 'TEAM_MEMBER';
   }, [user, project]);
 
@@ -129,7 +134,7 @@ const BoardPage = ({ project, user, onBack, onLogout }) => {
              id: t.idTarea || t.id,
              title: t.titulo || t.title,
              description: t.descripcion || t.description,
-             members: (t.asignados || []).map(a => ({ name: a.nombreUsuario || a.name || "Usuario" })),
+             members: (t.asignados || []).map(a => ({ id: a.idusuario, name: a.nombreUsuario || a.name || a.nombre || "Usuario" })),
              ...t
         });
 
@@ -275,31 +280,44 @@ const BoardPage = ({ project, user, onBack, onLogout }) => {
     }
   };
 
-  const handleDragEnd = (event) => {
+  const getColumnStatus = (columnId) => {
+      switch(columnId) {
+          case 'todo': return 'TODO';
+          case 'inProgress': return 'IN_PROGRESS';
+          case 'review': return 'REVIEW';
+          case 'done': return 'DONE';
+          default: return 'TODO';
+      }
+  };
+
+  const handleDragEnd = async (event) => {
     const { active, over } = event;
     const activeContainer = findContainer(active.id);
     const overContainer = findContainer(over ? over.id : null);
     const startContainer = dragStartContainerRef.current;
     
-    console.log('[DnD] Drag End:', { 
-        active: active.id, 
-        over: over?.id, 
-        start: startContainer, 
-        end: activeContainer // Should be same as overContainer usually
-    });
+    // ... filtering simple reorders
+    if (!overContainer || !startContainer) {
+        setActiveId(null);
+        setActiveTask(null);
+        return;
+    }
 
+    // Modal Triggers
+    
     // 1. Asignar (Todo -> In Progress)
-    if (
-        startContainer === 'todo' && 
-        (overContainer === 'inProgress' || activeContainer === 'inProgress')
-    ) {
+    if (startContainer === 'todo' && overContainer === 'inProgress') {
         const task = tasks['inProgress'].find(t => t.id.toString() === active.id.toString());
         if (task) {
-            const currentUser = "Jose Cortez";
-            const isAssigned = task.members.some(m => m.name === currentUser);
+            const userName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
+            const currentId = Number(user?.idUsuario || user?.id);
+            const isAssigned = task.members.some(m => 
+                (currentId && Number(m.id) === currentId) || 
+                m.name === userName || 
+                m.name === user?.usuario
+            );
             
             if (!isAssigned) {
-                console.log('[DnD] Triggering Assignment Modal for:', task.title);
                 setPendingAssignment({
                     taskId: task.id,
                     source: 'todo',
@@ -307,15 +325,23 @@ const BoardPage = ({ project, user, onBack, onLogout }) => {
                     task: task
                 });
                 setAssignModalOpen(true);
+                setActiveId(null);
+                setActiveTask(null);
+                return; 
+            } else {
+                 // Already assigned, just update status silent
+                 try {
+                     const projectId = project.id || project.idProyecto;
+                     await updateTaskStatus(task.id, projectId, 'IN_PROGRESS');
+                 } catch (e) {
+                     console.error("Error updating status:", e);
+                 }
             }
         }
     }
 
     // 2. Entregar (In Progress -> Review) -> SUBMIT
-    if (
-        startContainer === 'inProgress' &&
-        (overContainer === 'review' || activeContainer === 'review')
-    ) {
+    if (startContainer === 'inProgress' && overContainer === 'review') {
         const task = tasks['review'].find(t => t.id.toString() === active.id.toString());
         if (task) {
             setTransitionModal({
@@ -328,14 +354,14 @@ const BoardPage = ({ project, user, onBack, onLogout }) => {
                     task: task
                 }
             });
+            setActiveId(null);
+            setActiveTask(null);
+            return;
         }
     }
 
     // 3. Rechazar (Review -> In Progress) -> REJECT
-    if (
-        startContainer === 'review' &&
-        (overContainer === 'inProgress' || activeContainer === 'inProgress')
-    ) {
+    if (startContainer === 'review' && overContainer === 'inProgress') {
         const task = tasks['inProgress'].find(t => t.id.toString() === active.id.toString());
         if (task) {
             setTransitionModal({
@@ -348,14 +374,14 @@ const BoardPage = ({ project, user, onBack, onLogout }) => {
                     task: task
                 }
             });
+            setActiveId(null);
+            setActiveTask(null);
+            return;
         }
     }
 
      // 4. Aceptar (Review -> Done) -> APPROVE
-     if (
-        startContainer === 'review' &&
-        (overContainer === 'done' || activeContainer === 'done')
-    ) {
+     if (startContainer === 'review' && overContainer === 'done') {
         const task = tasks['done'].find(t => t.id.toString() === active.id.toString());
         if (task) {
             setTransitionModal({
@@ -368,6 +394,37 @@ const BoardPage = ({ project, user, onBack, onLogout }) => {
                     task: task
                 }
             });
+            setActiveId(null);
+            setActiveTask(null);
+            return;
+        }
+    }
+    
+    // Si llegamos aqui, es un movimiento que no disparo modal.
+    // Verificamos si cambio de columna para actualizar el backend.
+    if (startContainer !== overContainer) {
+        // e.g. Back from Review to InProgress (if allowed directly without modal? logic says Reject uses modal)
+        // e.g. Todo -> InProgress (handled above if assigned)
+        // e.g. InProgress -> Todo (moving back?)
+        // Lets just update status generic if valid transition
+        const task = tasks[overContainer].find(t => t.id.toString() === active.id.toString());
+        if (task) {
+             try {
+                 const projectId = project.id || project.idProyecto;
+                 const newStatus = getColumnStatus(overContainer);
+                 // Evitar doble update si ya lo manejamos arriba (Todo->InProgress assigned)
+                 // Arriba el 'else' hace el update.
+                 // Si cayo en bloques 2,3,4 retorno return, asi que no llega aqui.
+                 // Si cayo en bloque 1 (assigned), hace update.
+
+                 // Que queda? InProgress -> Todo? Done -> Review?
+                 // Si RBAC (isValidTransition) lo permitio, lo guardamos.
+                 if (!(startContainer === 'todo' && overContainer === 'inProgress')) { // Block 1 handled case
+                    await updateTaskStatus(task.id, projectId, newStatus);
+                 }
+             } catch (e) {
+                 console.error("Error updating status generic:", e);
+             }
         }
     }
 
@@ -377,6 +434,8 @@ const BoardPage = ({ project, user, onBack, onLogout }) => {
     dragStartContainerRef.current = null;
   };
 
+
+
   const handleConfirmAssignment = async () => {
     if (pendingAssignment) {
         const { task } = pendingAssignment;
@@ -384,10 +443,14 @@ const BoardPage = ({ project, user, onBack, onLogout }) => {
         try {
             const projectId = project.id || project.idProyecto;
             await autoAssignTask(task.id, projectId);
+            await updateTaskStatus(task.id, projectId, 'IN_PROGRESS'); // Update status too
 
             const updatedTask = { 
                 ...task, 
-                members: [...(task.members || []), { name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || user?.usuario }] 
+                members: [...(task.members || []), { 
+                    id: Number(user?.idUsuario || user?.id), 
+                    name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || user?.usuario 
+                }] 
             };
             
             // actualizar estado
@@ -397,7 +460,14 @@ const BoardPage = ({ project, user, onBack, onLogout }) => {
             }));
         } catch (error) {
             console.error("Error creating assignment:", error);
-            alert("Error al auto-asignarte la tarea: " + error.message);
+            // Si el error es que ya esta asignado, lo tratamos como exito (idempotente)
+            if (error.message.includes("Ya estás asignado") || error.message.includes("assigned")) {
+                 // Aun asi actualizamos el estado visual por si acaso
+                 // pero no mostramos alerta
+                 // Tambien podriamos forzar update de estado a IN_PROGRESS si era el objetivo
+            } else {
+                alert("Error al auto-asignarte la tarea: " + error.message);
+            }
         }
     }
     setAssignModalOpen(false);
@@ -434,28 +504,54 @@ const BoardPage = ({ project, user, onBack, onLogout }) => {
     setPendingAssignment(null);
   };
 
-  const handleConfirmTransition = (comment) => {
+  const handleConfirmTransition = async (comment) => {
     const { pendingTransition, type } = transitionModal;
 
     if (pendingTransition) {
         const { task, dest } = pendingTransition;
         
-        if (comment && comment.trim() !== '') {
-             // Agregar comentario a la tarea
-             const updatedTask = {
-                 ...task,
-                 comments: [...(task.comments || []), { 
-                     id: Date.now(), 
-                     text: comment, 
-                     author: "Jose Cortez", 
-                     timestamp: new Date().toISOString() 
-                 }]
-             };
-             
-             setTasks(prev => ({
-                 ...prev,
-                 [dest]: prev[dest].map(t => t.id === task.id ? updatedTask : t)
-             }));
+        try {
+            const projectId = project.id || project.idProyecto;
+            const newStatus = getColumnStatus(dest);
+            
+            // 1. Update Status on Backend
+            await updateTaskStatus(task.id, projectId, newStatus);
+
+            let newCommentObj = null;
+
+            // 2. Create Comment if exists
+            if (comment && comment.trim() !== '') {
+                 // Service expects (idTarea, contenidoString)
+                 // It handles auth headers internally
+                 const commentData = await createComment(task.id, comment);
+                 
+                 // Normalize comment for UI
+                 newCommentObj = { 
+                     id: commentData.id || Date.now(), 
+                     text: commentData.contenido || comment, 
+                     author: `${user.firstName} ${user.lastName}`.trim(), 
+                     timestamp: commentData.fechacreacion || commentData.fechaCreacion || new Date().toISOString() 
+                 };
+            }
+            
+            // 3. Update UI
+            setTasks(prev => {
+                const updatedTask = {
+                     ...task,
+                     status: newStatus, // ensure local status matches
+                     comments: newCommentObj ? [...(task.comments || []), newCommentObj] : task.comments
+                };
+                return {
+                     ...prev,
+                     [dest]: prev[dest].map(t => t.id === task.id ? updatedTask : t)
+                };
+            });
+
+        } catch (error) {
+            console.error("Error confirming transition:", error);
+            alert("Error updating task status: " + error.message);
+            handleCancelTransition(); // Revert visual move
+            return;
         }
     }
     setTransitionModal({ isOpen: false, type: null, pendingTransition: null });
@@ -553,7 +649,13 @@ const BoardPage = ({ project, user, onBack, onLogout }) => {
       // members list might have objects { name: "..." } or { idUsuario: ... }
       // We check by name for now as that's what we have locally, ideally check by ID if available
       const userName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
-      const isAssigned = task.members.some(m => m.name === userName || m.name === user?.usuario);
+      const currentId = Number(user?.idUsuario || user?.id);
+      
+      const isAssigned = task.members.some(m => 
+          (currentId && Number(m.id) === currentId) || 
+          m.name === userName || 
+          m.name === user?.usuario
+      );
       
       if (!isAssigned) {
           setPendingAssignment({
@@ -594,6 +696,7 @@ const BoardPage = ({ project, user, onBack, onLogout }) => {
               onEditTask={permissions.canEdit ? handleEditTask : undefined}
               onDeleteTask={permissions.canDelete ? handleDeleteTask : undefined}
               onCommentsTask={handleOpenComments}
+              currentUser={user}
             />
             <BoardColumn 
                 id="inProgress"
@@ -604,6 +707,7 @@ const BoardPage = ({ project, user, onBack, onLogout }) => {
                 onDeleteTask={permissions.canDelete ? handleDeleteTask : undefined}
                 onCommentsTask={handleOpenComments}
                 onAssignSelf={permissions.canAssignSelf ? handleManualAssign : undefined}
+                currentUser={user}
             />
             <BoardColumn 
                 id="review"
@@ -613,6 +717,7 @@ const BoardPage = ({ project, user, onBack, onLogout }) => {
                 onEditTask={permissions.canEdit ? handleEditTask : undefined}
                 onDeleteTask={permissions.canDelete ? handleDeleteTask : undefined}
                 onCommentsTask={handleOpenComments}
+                currentUser={user}
             />
             <BoardColumn 
                 id="done"
@@ -622,6 +727,7 @@ const BoardPage = ({ project, user, onBack, onLogout }) => {
                 onEditTask={permissions.canEdit ? handleEditTask : undefined}
                 onDeleteTask={permissions.canDelete ? handleDeleteTask : undefined}
                 onCommentsTask={handleOpenComments}
+                currentUser={user}
             />
           </div>
           

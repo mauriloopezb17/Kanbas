@@ -9,7 +9,7 @@ const TaskCard = (props) => {
   return <SortableTaskCard {...props} />;
 };
 
-const SortableTaskCard = ({ task, isExpanded, onToggle, color, onEdit, onDelete, onComments, columnId, onAssignSelf }) => {
+const SortableTaskCard = ({ task, isExpanded, onToggle, color, onEdit, onDelete, onComments, columnId, onAssignSelf, isAssigned }) => {
   const {
     attributes,
     listeners,
@@ -41,6 +41,7 @@ const SortableTaskCard = ({ task, isExpanded, onToggle, color, onEdit, onDelete,
       isDragging={isDragging}
       columnId={columnId}
       onAssignSelf={onAssignSelf}
+      isAssigned={isAssigned}
     />
   );
 };
@@ -60,7 +61,8 @@ const TaskCardUI = ({
     listeners,
     isDragging,
     columnId,
-    onAssignSelf
+    onAssignSelf,
+    isAssigned
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -72,11 +74,38 @@ const TaskCardUI = ({
         backgroundColor: color 
   };
   
-  const finalClassName = isOverlay 
+  // si esta asignado, borde azul y brillo
+  const assignedClass = isAssigned ? 'ring-4 ring-blue-400 shadow-xl' : '';
+  // si esta expandido y asignado, combinamos
+  const expandedClass = isExpanded 
+        ? 'bg-opacity-100 scale-100 shadow-lg ring-2 ring-white/20' 
+        : 'bg-opacity-90 hover:scale-[1.02] hover:bg-opacity-100';
+
+  const baseClass = isOverlay 
       ? `relative w-full rounded-3xl p-4 mb-4 shadow-2xl ring-2 ring-kanbas-blue cursor-grabbing overflow-hidden bg-opacity-100 scale-105`
-      : `relative w-full rounded-3xl p-4 mb-4 transition-[background-color,box-shadow,opacity] duration-300 ease-in-out cursor-grab active:cursor-grabbing overflow-hidden ${
-        isExpanded ? 'bg-opacity-100 scale-100 shadow-lg ring-2 ring-white/20' : 'bg-opacity-90 hover:scale-[1.02] hover:bg-opacity-100'
-      }`;
+      : `relative w-full rounded-3xl p-4 mb-4 transition-[background-color,box-shadow,opacity] duration-300 ease-in-out cursor-grab active:cursor-grabbing overflow-hidden ${isAssigned && !isExpanded ? assignedClass : expandedClass}`;
+
+  // Si esta asignado Y expandido, aseguramos que se vea bonito
+  const finalClassName = isAssigned && !isOverlay && !isExpanded ? baseClass : baseClass.replace(assignedClass, '') + (isAssigned && isExpanded ? ' ring-4 ring-blue-400' : ''); 
+  
+  // Actually simplest logic:
+  let className = `relative w-full rounded-3xl p-4 mb-4 transition-[background-color,box-shadow,opacity] duration-300 ease-in-out cursor-grab active:cursor-grabbing overflow-hidden`;
+  
+  if (isOverlay) {
+      className = `relative w-full rounded-3xl p-4 mb-4 shadow-2xl ring-2 ring-kanbas-blue cursor-grabbing overflow-hidden bg-opacity-100 scale-105`;
+  } else {
+      if (isExpanded) {
+          className += ' bg-opacity-100 scale-100 shadow-lg ring-2 ring-white/20';
+      } else {
+          className += ' bg-opacity-90 hover:scale-[1.02] hover:bg-opacity-100';
+      }
+      
+      if (isAssigned) {
+          // add differentiation (border)
+          // override ring if present
+          className += ' ring-4 ring-kanbas-blue ring-opacity-80';
+      }
+  }
       
   const handleMouseEnter = () => {
       if (!isDragging && !isOverlay) setIsHovered(true);
@@ -92,7 +121,7 @@ const TaskCardUI = ({
       style={finalStyle}
       {...attributes}
       {...listeners}
-      className={finalClassName}
+      className={className}
       onClick={onToggle}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -104,7 +133,7 @@ const TaskCardUI = ({
         </h3>
         
         {/* accion: agregar/asignarse o nada */}
-        {columnId === 'inProgress' && onAssignSelf && (
+        {columnId === 'inProgress' && onAssignSelf && !isAssigned && (
              <button
                 onClick={(e) => {
                     e.stopPropagation();
@@ -143,23 +172,27 @@ const TaskCardUI = ({
               </svg>
             </button>
             {/* icono editar */}
-            <button 
-              onClick={(e) => { e.stopPropagation(); onEdit && onEdit(task); }}
-              className="p-1 hover:bg-white/20 rounded-full transition"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
-            </button>
+            {onEdit && (
+                <button 
+                onClick={(e) => { e.stopPropagation(); onEdit(task); }}
+                className="p-1 hover:bg-white/20 rounded-full transition"
+                >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+                </button>
+            )}
             {/* icono borrar */}
-            <button 
-              onClick={(e) => { e.stopPropagation(); onDelete && onDelete(task); }}
-              className="p-1 hover:bg-white/20 rounded-full transition"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
+            {onDelete && (
+                <button 
+                onClick={(e) => { e.stopPropagation(); onDelete(task); }}
+                className="p-1 hover:bg-white/20 rounded-full transition"
+                >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                </button>
+            )}
           </div>
         </div>
       </div>
