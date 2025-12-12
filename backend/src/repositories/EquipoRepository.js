@@ -31,20 +31,48 @@ class EquipoRepository {
     return result.rows[0];
   }
 
-  async eliminarEquipo(idEquipo) {
+  async eliminarEquipoYDependencias(idEquipo) {
     const client = await pool.connect();
 
     try {
       await client.query("BEGIN");
 
-      // 1. Eliminar integrantes del equipo
+      const tareasResult = await client.query(
+        `SELECT idtarea
+       FROM tareas
+       WHERE idequipo = $1`,
+        [idEquipo]
+      );
+
+      const tareas = tareasResult.rows;
+
+      await client.query(
+        `DELETE FROM asignacion
+       WHERE idtarea IN (
+         SELECT idtarea FROM tareas WHERE idequipo = $1
+       )`,
+        [idEquipo]
+      );
+
+      await client.query(
+        `DELETE FROM comentarios
+       WHERE idtarea IN (
+         SELECT idtarea FROM tareas WHERE idequipo = $1
+       )`,
+        [idEquipo]
+      );
+
+      await client.query(
+        `DELETE FROM tareas
+       WHERE idequipo = $1`,
+        [idEquipo]
+      );
+
       await client.query(
         `DELETE FROM integrantes
        WHERE idequipo = $1`,
         [idEquipo]
       );
-
-      // 2. Eliminar el equipo
       const result = await client.query(
         `DELETE FROM equipos
        WHERE idequipo = $1
@@ -54,7 +82,10 @@ class EquipoRepository {
 
       await client.query("COMMIT");
 
-      return result.rows[0];
+      return {
+        equipo: result.rows[0],
+        tareasEliminadas: tareas.length,
+      };
     } catch (error) {
       await client.query("ROLLBACK");
       throw error;

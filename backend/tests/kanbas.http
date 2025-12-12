@@ -146,5 +146,5 @@ DELETE http://localhost:3000/api/equipos/1/integrantes/1
 Authorization: Bearer {{token}}
 
 ### Eliminar equipo por id con sus integrantes
-DELETE http://localhost:3000/api/equipos/2
+DELETE http://localhost:3000/api/equipos/1
 Authorization: Bearer {{token}}

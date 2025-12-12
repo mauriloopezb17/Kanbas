@@ -114,13 +114,15 @@ class EquipoService {
   }
 
   async eliminarEquipo(idEquipo) {
-    const eliminado = await EquipoRepository.eliminarEquipo(idEquipo);
+    const resultado = await EquipoRepository.eliminarEquipoYDependencias(
+      idEquipo
+    );
 
-    if (!eliminado) {
+    if (!resultado.equipo) {
       throw new Error("No existe un equipo con ese ID.");
     }
 
-    return eliminado;
+    return resultado;
   }
 }
 

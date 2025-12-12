@@ -116,11 +116,11 @@ class EquipoController {
     try {
       const { idEquipo } = req.params;
 
-      const eliminado = await EquipoService.eliminarEquipo(idEquipo);
+      const resultado = await EquipoService.eliminarEquipo(idEquipo);
 
       return res.status(200).json({
-        mensaje: "Equipo eliminado correctamente.",
-        eliminado,
+        mensaje: "Equipo eliminado con todas sus dependencias.",
+        detalles: resultado,
       });
     } catch (error) {
       return res.status(400).json({ error: error.message });
