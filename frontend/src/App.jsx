@@ -39,10 +39,8 @@ function App() {
 
   const handleSignup = async (userData) => {
     try {
-      const response = await register(userData);
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.usuario)); // Persistir usuario
-      setUser(response.usuario);
+      await register(userData);
+      setIsLoginView(true);
     } catch (error) {
       throw error;
     }

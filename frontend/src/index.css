@@ -1,6 +1,12 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-kanbas-blue: #2563eb;
+  --color-kanbas-purple: #7c3aed;
+  --color-kanbas-red: #ef4444;
+  --color-kanbas-orange: #f97316;
+  --color-kanbas-green: #10b981;
+}
 
 body {
   font-family: 'Outfit', sans-serif;

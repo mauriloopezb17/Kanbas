@@ -1,5 +1,5 @@
 ### Crear Usuario
-POST http://localhost:3000/api/auth/register
+POST http://100.113.154.56:3000/api/auth/register
 Content-Type: application/json
 
 {
@@ -11,7 +11,7 @@ Content-Type: application/json
 }
 
 ### Crear Usuario 2
-POST http://localhost:3000/api/auth/register
+POST http://100.113.154.56:3000/api/auth/register
 Content-Type: application/json
 
 {
@@ -23,7 +23,7 @@ Content-Type: application/json
 }
 
 ### Crear Usuario 3
-POST http://localhost:3000/api/auth/register
+POST http://100.113.154.56:3000/api/auth/register
 Content-Type: application/json
 
 {
@@ -35,7 +35,7 @@ Content-Type: application/json
 }
 
 ### Crear Usuario 4
-POST http://localhost:3000/api/auth/register
+POST http://100.113.154.56:3000/api/auth/register
 Content-Type: application/json
 
 {
@@ -47,7 +47,7 @@ Content-Type: application/json
 }
 
 ### Crear Usuario 5
-POST http://localhost:3000/api/auth/register
+POST http://100.113.154.56:3000/api/auth/register
 Content-Type: application/json
 
 {
@@ -59,7 +59,7 @@ Content-Type: application/json
 }
 
 ### Crear Usuario 6
-POST http://localhost:3000/api/auth/register
+POST http://100.113.154.56:3000/api/auth/register
 Content-Type: application/json
 
 {
@@ -71,7 +71,7 @@ Content-Type: application/json
 }
 
 ### Crear Usuario 7
-POST http://localhost:3000/api/auth/register
+POST http://100.113.154.56:3000/api/auth/register
 Content-Type: application/json
 
 {

@@ -8,7 +8,7 @@ export default defineConfig({
     proxy: {
       // Any request starting with /api will be forwarded to your Node backend
       '/api': {
-        target: 'http://localhost:3000', // Change this to your Node port later
+        target: 'http://100.113.154.56:3000', // Change this to your Node port later
         changeOrigin: true,
         secure: false,
       },

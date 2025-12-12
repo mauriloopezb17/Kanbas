@@ -4,8 +4,6 @@ import EquipoRepository from "../repositories/EquipoRepository.js";
 import IntegrantesRepository from "../repositories/IntegrantesRepository.js";
 import ComentarioRepository from "../repositories/ComentarioRepository.js";
 import NotificacionRepository from "../repositories/NotificacionRepository.js";
-import NotificacionRepository from "../repositories/NotificacionRepository.js";
-import ProyectoRepository from "../repositories/ProyectoRepository.js";
 
 class TareaService {
   async crearTarea({
@@ -48,35 +46,6 @@ class TareaService {
       prioridad,
       fechaLimite,
     });
-
-    try {
-      const proyecto = await ProyectoRepository.findById(idProyecto);
-
-      const integrantesEquipo = await IntegrantesRepository.getIntegrantes(
-        idEquipo
-      );
-
-      if (integrantesEquipo.length > 0) {
-        const notificacion = await NotificacionRepository.crearNotificacion({
-          titulo: `Nueva tarea asignada a tu equipo`,
-          contenido: `La tarea "${
-            tarea.titulo
-          }" ha sido creada en el proyecto "${
-            proyecto?.nombreProyecto ?? ""
-          }" y asignada a tu equipo.`,
-          idUsuarioEmisor: idUsuarioSolicitante,
-        });
-
-        for (const integrante of integrantesEquipo) {
-          await NotificacionRepository.agregarDestinatario(
-            notificacion.idNotificacion,
-            integrante.idusuario
-          );
-        }
-      }
-    } catch (error) {
-      console.error("Error al enviar notificación por nueva tarea:", error);
-    }
 
     if (integrantes.length > 0) {
       const lista = await IntegrantesRepository.getIntegrantes(idEquipo);
@@ -147,6 +116,7 @@ class TareaService {
   async obtenerTareasDelProyecto(idProyecto, idUsuarioSolicitante) {
     let tareas = await TareaRepository.findByProyecto(idProyecto);
 
+    // Filter logic based on role
     if (idUsuarioSolicitante) {
       const rol = await UsuarioRepository.getUserRoleInProject(
         idUsuarioSolicitante,
@@ -229,12 +199,12 @@ class TareaService {
       await TareaRepository.updateEquipo(idTarea, datos.idEquipo);
     }
 
-    const nuevaTarea = await TareaRepository.updateTarea({
-      idTarea,
+    const nuevaTarea = await TareaRepository.updateTarea(idTarea, {
       titulo: datos.titulo ?? tareaActual.titulo,
       descripcion: datos.descripcion ?? tareaActual.descripcion,
       prioridad: datos.prioridad ?? tareaActual.prioridad,
       fechaLimite: datos.fechaLimite ?? tareaActual.fechaLimite,
+      idEquipo: idEquipoFinal,
     });
 
     if (Array.isArray(datos.integrantes)) {
@@ -313,7 +283,7 @@ class TareaService {
     const transicion = `${estadoAnterior}->${nuevoEstado}`;
 
     const esIntegrante = rol === "Integrante";
-    const esSRMoPO = ["SRM", "Product Owner", "PO"].includes(rol);
+    const esSRMoPO = ["SRM", "Product Owner", "PO", "SDM"].includes(rol);
 
     const usuariosAsignados = await TareaRepository.getUsuariosAsignados(
       idTarea
@@ -355,54 +325,38 @@ class TareaService {
       tareaActualizada = await TareaRepository.actualizarFechaEntrega(idTarea);
     }
 
-    if (estadoAnterior === "IN_PROGRESS" && nuevoEstado === "REVIEW") {
-      try {
-        const responsables =
-          await NotificacionRepository.getResponsablesProyecto(idProyecto);
+    if (nuevoEstado === "REVIEW") {
+      const proyecto = await NotificacionRepository.getResponsablesProyecto(
+        idProyecto
+      );
 
-        if (responsables) {
-          const destinatarios = [];
+      if (proyecto) {
+        const destinatarios = [];
+        if (proyecto.idusuario_srm) destinatarios.push(proyecto.idusuario_srm);
+        if (proyecto.idusuario_po) destinatarios.push(proyecto.idusuario_po);
 
-          if (responsables.idusuario_srm) {
-            destinatarios.push(responsables.idusuario_srm);
-          }
+        if (destinatarios.length > 0) {
+          const notificacion = await NotificacionRepository.crearNotificacion({
+            titulo: `Tarea "${tareaActualizada.titulo}" lista para revisión`,
+            contenido: `La tarea "${tareaActualizada.titulo}" del proyecto "${proyecto.nombreproyecto}" ha cambiado a estado REVIEW.`,
+            idUsuarioEmisor: idUsuarioSolicitante,
+          });
 
-          if (responsables.idusuario_po) {
-            destinatarios.push(responsables.idusuario_po);
-          }
-
-          if (destinatarios.length > 0) {
-            const notificacion = await NotificacionRepository.crearNotificacion(
-              {
-                titulo: `Tarea "${tareaActualizada.titulo}" lista para revisión`,
-                contenido: `La tarea "${tareaActualizada.titulo}" ha sido movida a REVIEW y está lista para revisión.`,
-                idUsuarioEmisor: idUsuarioSolicitante,
-              }
+          for (const idUsuario of destinatarios) {
+            await NotificacionRepository.agregarDestinatario(
+              notificacion.idnotificacion,
+              idUsuario
             );
-
-            for (const idUsuario of destinatarios) {
-              if (idUsuario === idUsuarioSolicitante) continue;
-
-              await NotificacionRepository.agregarDestinatario(
-                notificacion.idnotificacion,
-                idUsuario
-              );
-            }
           }
         }
-      } catch (error) {
-        console.error(
-          "Error al enviar notificación IN_PROGRESS -> REVIEW:",
-          error
-        );
       }
     }
 
-    if (estadoAnterior === "REVIEW" && nuevoEstado === "DONE") {
-      try {
+    if (nuevoEstado === "DONE") {
+      if (usuariosAsignados.length > 0) {
         const notificacion = await NotificacionRepository.crearNotificacion({
-          titulo: `Tarea "${tareaActualizada.titulo}" finalizada`,
-          contenido: `La tarea "${tareaActualizada.titulo}" ha sido aprobada en revisión y marcada como DONE.`,
+          titulo: `Tarea "${tareaActualizada.titulo}" completada`,
+          contenido: `La tarea "${tareaActualizada.titulo}" ha sido marcada como DONE.`,
           idUsuarioEmisor: idUsuarioSolicitante,
         });
 
@@ -412,29 +366,6 @@ class TareaService {
             usuario.idusuario
           );
         }
-      } catch (error) {
-        console.error("Error enviando notificación de tarea aprobada:", error);
-      }
-    }
-
-    if (estadoAnterior === "REVIEW" && nuevoEstado === "IN_PROGRESS") {
-      try {
-        const notificacion = await NotificacionRepository.crearNotificacion({
-          titulo: `Tarea "${tareaActualizada.titulo}" rechazada`,
-          contenido: `La tarea "${tareaActualizada.titulo}" fue rechazada en la revisión y ha vuelto a IN_PROGRESS.`,
-          idUsuarioEmisor: idUsuarioSolicitante,
-        });
-
-        for (const usuario of usuariosAsignados) {
-          if (usuario.idusuario === idUsuarioSolicitante) continue;
-
-          await NotificacionRepository.agregarDestinatario(
-            notificacion.idnotificacion,
-            usuario.idusuario
-          );
-        }
-      } catch (error) {
-        console.error("Error enviando notificación de tarea rechazada:", error);
       }
     }
 

@@ -1,6 +1,6 @@
 ### Login
 # @name login
-POST http://localhost:3000/api/auth/login
+POST http://100.113.154.56:3000/api/auth/login
 Content-Type: application/json
 
 {
@@ -12,7 +12,7 @@ Content-Type: application/json
 @token = {{login.response.body.token}}
 
 ### Crear proyecto
-POST http://localhost:3000/api/proyectos/crear
+POST http://100.113.154.56:3000/api/proyectos/crear
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -23,7 +23,7 @@ Content-Type: application/json
 }
 
 ### Asignar Product Owner
-PUT http://localhost:3000/api/proyectos/2/product-owner
+PUT http://100.113.154.56:3000/api/proyectos/2/product-owner
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -32,7 +32,7 @@ Content-Type: application/json
 }
 
 ### Asignar SDM
-PUT http://localhost:3000/api/proyectos/2/sdm
+PUT http://100.113.154.56:3000/api/proyectos/2/sdm
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -41,7 +41,7 @@ Content-Type: application/json
 }
 
 ### Crear equipo
-POST http://localhost:3000/api/equipos/crear
+POST http://100.113.154.56:3000/api/equipos/crear
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -51,7 +51,7 @@ Content-Type: application/json
 }
 
 ### Añadir integrante al equipo
-POST http://localhost:3000/api/integrantes/agregar
+POST http://100.113.154.56:3000/api/integrantes/agregar
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -62,19 +62,19 @@ Content-Type: application/json
 }
 
 ### Obtener proyectos del usuario logueado
-GET http://localhost:3000/api/proyectos
+GET http://100.113.154.56:3000/api/proyectos
 Authorization: Bearer {{token}}
 
 ### Obtener equipos del proyecto
-GET http://localhost:3000/api/equipos/proyecto/2
+GET http://100.113.154.56:3000/api/equipos/proyecto/2
 Authorization: Bearer {{token}}
 
 ### Obtener integrantes del equipo
-GET http://localhost:3000/api/equipos/1/integrantes
+GET http://100.113.154.56:3000/api/equipos/1/integrantes
 Authorization: Bearer {{token}}
 
 ### Crear tarea
-POST http://localhost:3000/api/tareas/crear
+POST http://100.113.154.56:3000/api/tareas/crear
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -89,7 +89,7 @@ Content-Type: application/json
 }
 
 ### Editar tarea
-PUT http://localhost:3000/api/tareas/editar/2/2
+PUT http://100.113.154.56:3000/api/tareas/editar/2/2
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -103,23 +103,23 @@ Content-Type: application/json
 }
 
 ### Encontrar tarea seleccionada
-GET http://localhost:3000/api/tareas/2/2
+GET http://100.113.154.56:3000/api/tareas/2/2
 Authorization: Bearer {{token}}
 
 ### Obtener todas las tareas del proyecto para el dashboard
-GET http://localhost:3000/api/tareas/proyecto/2
+GET http://100.113.154.56:3000/api/tareas/proyecto/2
 Authorization: Bearer {{token}}
 
 ### Obtener perfil
-GET http://localhost:3000/api/usuarios/perfil
+GET http://100.113.154.56:3000/api/usuarios/perfil
 Authorization: Bearer {{token}}
 
 ### Obtener todos los usuarios
-GET http://localhost:3000/api/usuarios
+GET http://100.113.154.56:3000/api/usuarios
 Authorization: Bearer {{token}}
 
 ### Nuevo mensaje
-POST http://localhost:3000/api/mensajes/enviar
+POST http://100.113.154.56:3000/api/mensajes/enviar
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -130,43 +130,43 @@ Content-Type: application/json
 
 
 ### Obtener todos los mensaje (inbox)
-GET http://localhost:3000/api/mensajes/inbox
+GET http://100.113.154.56:3000/api/mensajes/inbox
 Authorization: Bearer {{token}}
 
 ### Obtener perfil de un usuario
-GET http://localhost:3000/api/usuarios/2
+GET http://100.113.154.56:3000/api/usuarios/2
 Authorization: Bearer {{token}}
 
 ### Obtener todos los usuarios del proyecto
-GET http://localhost:3000/api/proyectos/1/usuarios
+GET http://100.113.154.56:3000/api/proyectos/1/usuarios
 Authorization: Bearer {{token}}
 
 ### Eliminar integrante de un equipo
-DELETE http://localhost:3000/api/equipos/1/integrantes/1
+DELETE http://100.113.154.56:3000/api/equipos/1/integrantes/1
 Authorization: Bearer {{token}}
 
 ### Eliminar equipo por id con sus integrantes
-DELETE http://localhost:3000/api/equipos/1
+DELETE http://100.113.154.56:3000/api/equipos/1
 Authorization: Bearer {{token}}
 
 ### Eliminar tarea
-DELETE http://localhost:3000/api/tareas/eliminar/2
+DELETE http://100.113.154.56:3000/api/tareas/eliminar/2
 Authorization: Bearer {{token}}
 
 ### Buscar usuario por email o username
-GET http://localhost:3000/api/usuarios/buscar?identifier=mauriloopezb17@gmail.com
+GET http://100.113.154.56:3000/api/usuarios/buscar?identifier=mauriloopezb17@gmail.com
 Authorization: Bearer {{token}}
 
 ###
-GET http://localhost:3000/api/usuarios/buscar?identifier=cobine
+GET http://100.113.154.56:3000/api/usuarios/buscar?identifier=cobine
 Authorization: Bearer {{token}}
 
 ### autoasignarse una tarea
-POST http://localhost:3000/api/tareas/autoasignar/4/2
+POST http://100.113.154.56:3000/api/tareas/autoasignar/4/2
 Authorization: Bearer {{token}}
 
 ### crear comentario
-POST http://localhost:3000/api/comentarios/crear
+POST http://100.113.154.56:3000/api/comentarios/crear
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -176,15 +176,15 @@ Content-Type: application/json
 }
 
 ### obtener todos los comentarios de una tarea
-GET http://localhost:3000/api/comentarios/listar/4
+GET http://100.113.154.56:3000/api/comentarios/listar/4
 Authorization: Bearer {{token}}
 
 ### eliminar comentario
-DELETE http://localhost:3000/api/comentarios/eliminar/3
+DELETE http://100.113.154.56:3000/api/comentarios/eliminar/3
 Authorization: Bearer {{token}}
 
 ### Mover tarea a IN_PROGRESS
-PATCH http://localhost:3000/api/tareas/4/estado
+PATCH http://100.113.154.56:3000/api/tareas/4/estado
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -194,7 +194,7 @@ Content-Type: application/json
 }
 
 ### Mover tarea a REVIEW
-PATCH http://localhost:3000/api/tareas/4/estado
+PATCH http://100.113.154.56:3000/api/tareas/4/estado
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -204,7 +204,7 @@ Content-Type: application/json
 }
 
 ### Aprobar tarea REVIEW a DONE
-PATCH http://localhost:3000/api/tareas/4/estado
+PATCH http://100.113.154.56:3000/api/tareas/4/estado
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -214,7 +214,7 @@ Content-Type: application/json
 }
 
 ### Rechazar tarea REVIEW a IN_PROGRESS
-PATCH http://localhost:3000/api/tareas/4/estado
+PATCH http://100.113.154.56:3000/api/tareas/4/estado
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -224,9 +224,9 @@ Content-Type: application/json
 }
 
 ### obtener notificaciones
-GET http://localhost:3000/api/notificaciones
+GET http://100.113.154.56:3000/api/notificaciones
 Authorization: Bearer {{token}}
 
 ### REPORTE DE RENDIMIENTO
-GET http://localhost:3000/api/reportes/rendimiento/1
+GET http://100.113.154.56:3000/api/reportes/rendimiento/1
 Authorization: Bearer {{token}}

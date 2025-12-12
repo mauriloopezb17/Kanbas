@@ -127,7 +127,7 @@ const LoginForm = ({ onSwitchToLogin, onSwitchToSignup, onSubmit }) => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="bg-kanbas-blue text-white font-bold py-3 px-8 rounded-full hover:bg-blue-600 transition duration-300 shadow-md disabled:bg-gray-400"
+              className="bg-kanbas-blue text-white font-bold py-3 px-8 rounded-full hover:bg-blue-700 transition duration-300 shadow-md disabled:bg-gray-400"
             >
               {isSubmitting ? 'Iniciando...' : 'Iniciar Sesion'}
             </button>
