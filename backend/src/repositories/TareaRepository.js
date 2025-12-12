@@ -101,6 +101,42 @@ class TareaRepository {
 
     return result.rows;
   }
+
+  async eliminarTarea(idTarea) {
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      await client.query(
+        `DELETE FROM asignacion
+       WHERE idtarea = $1`,
+        [idTarea]
+      );
+
+      await client.query(
+        `DELETE FROM comentarios
+       WHERE idtarea = $1`,
+        [idTarea]
+      );
+
+      const result = await client.query(
+        `DELETE FROM tareas
+       WHERE idtarea = $1
+       RETURNING *`,
+        [idTarea]
+      );
+
+      await client.query("COMMIT");
+
+      return result.rows[0];
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
 }
 
 export default new TareaRepository();

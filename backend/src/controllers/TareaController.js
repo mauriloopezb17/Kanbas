@@ -133,17 +133,14 @@ class TareaController {
 
   async eliminarTarea(req, res) {
     try {
-      const { idTarea, idProyecto } = req.params;
+      const { idTarea } = req.params;
 
-      const idUsuarioSolicitante = req.user.idUsuario;
+      const tarea = await TareaService.eliminarTarea(idTarea);
 
-      const data = await TareaService.eliminarTarea(
-        parseInt(idTarea),
-        parseInt(idProyecto),
-        idUsuarioSolicitante
-      );
-
-      return res.status(200).json(data);
+      return res.status(200).json({
+        mensaje: "Tarea eliminada correctamente.",
+        tarea,
+      });
     } catch (error) {
       return res.status(400).json({ error: error.message });
     }

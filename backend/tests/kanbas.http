@@ -80,12 +80,12 @@ Content-Type: application/json
 
 {
   "idProyecto": 2,
-  "idEquipo": 1,
+  "idEquipo": 3,
   "titulo": "Diseño del frontend",
   "descripcion": "Centrar div",
   "prioridad": 1,
   "fechaLimite": "2025-12-24",
-  "integrantes": [1, 2]
+  "integrantes": []
 }
 
 ### Editar tarea
@@ -147,4 +147,16 @@ Authorization: Bearer {{token}}
 
 ### Eliminar equipo por id con sus integrantes
 DELETE http://localhost:3000/api/equipos/1
+Authorization: Bearer {{token}}
+
+### Eliminar tarea
+DELETE http://localhost:3000/api/tareas/eliminar/2
+Authorization: Bearer {{token}}
+
+### Buscar usuario por email o username
+GET http://localhost:3000/api/usuarios/buscar?identifier=mauriloopezb17@gmail.com
+Authorization: Bearer {{token}}
+
+###
+GET http://localhost:3000/api/usuarios/buscar?identifier=cobine
 Authorization: Bearer {{token}}

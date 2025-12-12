@@ -122,6 +122,28 @@ class UsuarioController {
       return res.status(400).json({ error: error.message });
     }
   }
+
+  async buscarPorIdentificador2(req, res) {
+    try {
+      const { identifier } = req.query;
+
+      if (!identifier) {
+        return res
+          .status(400)
+          .json({ error: "Debe proporcionar un identificador." });
+      }
+
+      const usuario = await UsuarioService.buscarPorIdentificador(identifier);
+
+      if (!usuario) {
+        return res.status(404).json({ error: "Usuario no encontrado." });
+      }
+
+      return res.status(200).json(usuario);
+    } catch (error) {
+      return res.status(400).json({ error: error.message });
+    }
+  }
 }
 
 export default new UsuarioController();

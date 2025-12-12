@@ -80,4 +80,10 @@ router.get(
   TareaController.obtenerTarea
 );
 
+router.delete(
+  "/eliminar/:idTarea",
+  authMiddleware,
+  TareaController.eliminarTarea
+);
+
 export default router;

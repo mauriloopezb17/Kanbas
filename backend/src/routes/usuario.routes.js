@@ -4,6 +4,12 @@ import authMiddleware from "../middlewares/authMiddleware.js";
 
 const router = Router();
 
+router.get(
+  "/buscar",
+  authMiddleware,
+  UsuarioController.buscarPorIdentificador2
+);
+
 router.get("/buscar/:identifier", UsuarioController.buscarPorIdentificador);
 
 router.get("/email/:email", UsuarioController.buscarPorEmail);

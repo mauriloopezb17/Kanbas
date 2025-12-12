@@ -260,19 +260,14 @@ class TareaService {
     return await TareaRepository.getUsuariosAsignados(idTarea);
   }
 
-  async eliminarTarea(idTarea, idProyecto, idUsuarioSolicitante) {
-    const rol = await UsuarioRepository.getUserRoleInProject(
-      idUsuarioSolicitante,
-      idProyecto
-    );
+  async eliminarTarea(idTarea) {
+    const eliminada = await TareaRepository.eliminarTarea(idTarea);
 
-    if (rol !== "SRM") {
-      throw new Error("Solo el SRM puede eliminar tareas.");
+    if (!eliminada) {
+      throw new Error("La tarea no existe.");
     }
 
-    await TareaRepository.deleteTarea(idTarea);
-
-    return { mensaje: "Tarea eliminada correctamente." };
+    return eliminada;
   }
 
   async obtenerComentarios(idTarea, idProyecto, idUsuarioSolicitante) {
