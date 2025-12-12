@@ -1,25 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MainLayout from '../../../layouts/MainLayout';
 import ProjectCard from '../components/ProjectCard';
 import CreateProjectModal from '../components/CreateProjectModal';
+import { getProjects } from '../services/projectsService';
 
-const ProjectsDashboard = ({ user, onProjectClick }) => {
+const ProjectsDashboard = ({ user, onProjectClick, onLogout }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Datos de prueba para proyectos
-  const projects = [
-    { id: 1, name: 'Lanzamiento Mobile App', color: '#e9d5ff' }, // Morado claro
-    { id: 2, name: 'Campaña Marketing Q4', color: '#fde047' }, // Amarillo
-    { id: 3, name: 'Rediseño Sitio Web', color: '#f87171' }, // Rojo
-  ];
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      const data = await getProjects();
+      setProjects(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
 
   const handleNext = () => {
-    console.log('Navigate to next step');
     setIsModalOpen(false);
+    fetchProjects(); // Recargar lista al crear
   };
 
   return (
-    <MainLayout>
+    <MainLayout onLogout={onLogout} user={user}>
       <div className="max-w-6xl mx-auto">
         <h2 className="text-2xl font-normal text-black mb-8 font-sans">
           Bienvenido, {user?.firstName} {user?.lastName}
@@ -28,15 +41,27 @@ const ProjectsDashboard = ({ user, onProjectClick }) => {
         <div className="mb-4">
           <h3 className="text-xl font-normal text-black mb-4 font-sans">Proyectos:</h3>
           
+          {loading && <p>Cargando proyectos...</p>}
+          {error && <p className="text-red-500">Error: {error}</p>}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {projects.map((project) => (
-              <div key={project.id} onClick={() => onProjectClick && onProjectClick(project)}>
-                <ProjectCard 
-                  name={project.name} 
-                  color={project.color} 
-                />
-              </div>
-            ))}
+            {!loading && projects.map((project) => {
+              // Determinar rol
+              let role = 'TEAM MEMBER';
+              if (user && project.idSRM === user.idUsuario) role = 'SRM';
+              else if (user && project.idSDM === user.idUsuario) role = 'SDM';
+              else if (user && project.idPO === user.idUsuario) role = 'PO';
+
+              return (
+                <div key={project.id} onClick={() => onProjectClick && onProjectClick(project)}>
+                  <ProjectCard 
+                    name={project.name} 
+                    color={project.color} 
+                    role={role}
+                  />
+                </div>
+              );
+            })}
 
             {/* Botón Agregar Proyecto */}
             <div 

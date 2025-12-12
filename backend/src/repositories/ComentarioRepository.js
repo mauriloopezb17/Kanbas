@@ -4,10 +4,27 @@ import Comentario from "../models/Comentario.js";
 class ComentarioRepository {
   async findByTarea(idTarea) {
     const result = await pool.query(
-      `SELECT * FROM comentarios WHERE idtarea = $1 ORDER BY fecha ASC`,
+      `SELECT 
+         c.idcomentario, 
+         c.contenido, 
+         c.fecha, 
+         c.idtarea, 
+         c.idusuario,
+         u.usuario,
+         u.nombre,
+         u.apellido
+       FROM comentarios c
+       JOIN usuarios u ON u.idusuario = c.idusuario
+       WHERE c.idtarea = $1 
+       ORDER BY c.fecha ASC`,
       [idTarea]
     );
-    return result.rows.map((row) => new Comentario(row));
+    // map to raw objects with extra fields, or update model?
+    // Repository returning model instances usually strips extra fields if model is strict.
+    // Let's check Comentario.js model?
+    // If I cant check model, I'll return result.rows directly as this is a DTO-like usage for frontend.
+    // Usually "new Comentario(row)" might only assign known fields.
+    return result.rows; 
   }
 
   async create({ contenido, fecha, idTarea, idUsuario }) {

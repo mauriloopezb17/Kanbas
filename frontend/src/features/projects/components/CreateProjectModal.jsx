@@ -1,16 +1,15 @@
 import React from 'react';
+import { createProject, assignProductOwner, assignSDM, createTeam, addTeamMember, deleteTeam } from '../services/projectsService';
+import { searchUser } from '../../users/services/usersService';
 
 const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
   const [step, setStep] = React.useState(1);
   
   // datos del proyecto
+  const [projectId, setProjectId] = React.useState(null);
   const [productOwner, setProductOwner] = React.useState(null);
   const [sdm, setSdm] = React.useState(null);
-  const [teams, setTeams] = React.useState([
-    { id: 1, name: 'Equipo DB', members: [] },
-    { id: 2, name: 'Equipo UI', members: [] },
-    { id: 3, name: 'Equipo Marketing', members: [] },
-  ]);
+  const [teams, setTeams] = React.useState([]);
 
   // lo que escribe el usuario
   const [projectName, setProjectName] = React.useState('');
@@ -22,6 +21,7 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
   
   // errores y validaciones
   const [errors, setErrors] = React.useState({});
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   // cosas de la animacion
   const [isExiting, setIsExiting] = React.useState(false);
@@ -35,6 +35,7 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
   React.useEffect(() => {
     if (isOpen) {
       setStep(1);
+      setProjectId(null);
       setProductOwner(null);
       setSdm(null);
       setProjectName('');
@@ -67,6 +68,20 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
       }
     }
 
+    if (currentStep === 2) {
+      if (!productOwner) {
+        alert('Debes asignar un Product Owner para continuar');
+        isValid = false;
+      }
+    }
+
+    if (currentStep === 3) {
+      if (!sdm) {
+        alert('Debes asignar un SDM para continuar');
+        isValid = false;
+      }
+    }
+
     if (currentStep === 5) { // paso de crear equipo
       if (!newTeamName.trim()) {
         newErrors.newTeamName = true;
@@ -78,10 +93,32 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
     return isValid;
   };
 
-  const handleStepTransition = (nextStep) => {
+  const handleStepTransition = async (nextStep) => {
     // solo validar si vamos pa delante
-    if (step === 1 && nextStep > 1) {
-      if (validateStep(1)) {
+    if (step < nextStep) {
+      if (!validateStep(step)) return;
+
+      if (step === 1) {
+         setIsSubmitting(true);
+         try {
+           const payload = {
+            nombreProyecto: projectName,
+            descripcion: projectDescription,
+            fechaFin: deadline || null
+           };
+           const response = await createProject(payload);
+           if (response.proyecto && response.proyecto.idProyecto) {
+             setProjectId(response.proyecto.idProyecto);
+             changeStep(nextStep);
+           } else {
+             changeStep(nextStep);
+           }
+         } catch (error) {
+           alert(error.message);
+         } finally {
+           setIsSubmitting(false);
+         }
+      } else {
         changeStep(nextStep);
       }
     } else {
@@ -89,24 +126,67 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
     }
   };
 
-  // agregar usuario de mentira
-  const handleAddUser = (targetSetter, currentInput, inputSetter) => {
+  const handleAddUser = async (targetSetter, currentInput, inputSetter) => {
     if (currentInput) {
-      const mockUser = { name: 'Usuario Simulado', email: currentInput };
-      if (targetSetter === setProductOwner) mockUser.name = 'Carlos Montes';
-      if (targetSetter === setSdm) mockUser.name = 'Pepe Pinto';
-      
-      targetSetter(mockUser);
-      inputSetter('');
+      if (targetSetter === setProductOwner) {
+        if (!projectId) {
+          alert('Error: No hay ID de proyecto. Intenta volver al inicio.');
+          return;
+        }
+        
+        setIsSubmitting(true);
+        try {
+          const response = await assignProductOwner(projectId, currentInput);
+          targetSetter({ name: currentInput });
+          inputSetter('');
+        } catch (error) {
+          setErrors(prev => ({ ...prev, assignUserError: true }));
+        } finally {
+          setIsSubmitting(false);
+        }
+      } 
+      else if (targetSetter === setSdm) {
+        if (!projectId) {
+          alert('Error: No hay ID de proyecto. Intenta volver al inicio.');
+          return;
+        }
+
+        setIsSubmitting(true);
+        try {
+          const response = await assignSDM(projectId, currentInput);
+          targetSetter({ name: currentInput });
+          inputSetter('');
+        } catch (error) {
+           setErrors(prev => ({ ...prev, assignSdmError: true }));
+        } finally {
+          setIsSubmitting(false);
+        }
+      }
     }
   };
 
-  const handleAddTeamMember = () => {
+  const handleAddTeamMember = async () => {
     if (emailInput) {
-      const names = ['Pedro Parques', 'Miguel Pacheco', 'Ana Torres'];
-      const randomName = names[newTeamMembers.length % names.length];
-      setNewTeamMembers([...newTeamMembers, { name: randomName, email: emailInput }]);
-      setEmailInput('');
+      if (newTeamMembers.some(m => m.email === emailInput)) {
+        alert('Este usuario ya está en la lista');
+        return;
+      }
+
+      setIsSubmitting(true);
+      try {
+        const user = await searchUser(emailInput);
+        
+        setNewTeamMembers([...newTeamMembers, { 
+          name: user.nombre ? `${user.nombre} ${user.apellido || ''}` : user.usuario, 
+          email: user.email || user.usuario, // fallback
+          username: user.usuario
+        }]);
+        setEmailInput('');
+      } catch (error) {
+        alert('Usuario no encontrado: ' + error.message);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -116,22 +196,63 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
     setNewTeamMembers(updated);
   };
 
-  const handleCreateTeam = () => {
+  const handleCreateTeam = async () => {
     if (validateStep(5)) {
-      const newTeam = {
-        id: Date.now(),
-        name: newTeamName,
-        members: newTeamMembers
-      };
-      setTeams([...teams, newTeam]);
-      setNewTeamName('');
-      setNewTeamMembers([]);
-      changeStep(4);
+      if (!projectId) {
+        alert('Error: No hay ID de proyecto.');
+        return;
+      }
+
+      setIsSubmitting(true);
+      try {
+        // 1. Crear el equipo
+        const teamResponse = await createTeam(projectId, newTeamName);
+        const createdTeam = teamResponse.equipo; // { idEquipo: ..., nombreEquipo: ..., integrantes: [] }
+         
+        // 2. Agregar integrantes (si hay)
+        const membersWithIds = [];
+        if (newTeamMembers.length > 0 && createdTeam && createdTeam.idEquipo) {
+            for (const member of newTeamMembers) {
+                try {
+                    await addTeamMember(createdTeam.idEquipo, projectId, member.email);
+                    membersWithIds.push(member);
+                } catch (memberError) {
+                    console.error(`Error agregando a ${member.email}:`, memberError);
+                    alert(`Error agregando a ${member.name}: ${memberError.message}`);
+                    // Podríamos decidir si parar o seguir. Por ahora seguimos.
+                }
+            }
+        }
+
+        // 3. Actualizar estado local
+        const newTeamForState = {
+            id: createdTeam.idEquipo,
+            name: createdTeam.nombreEquipo,
+            members: membersWithIds
+        };
+        
+        setTeams([...teams, newTeamForState]);
+        
+        // Limpiar form
+        setNewTeamName('');
+        setNewTeamMembers([]);
+        changeStep(4);
+
+      } catch (error) {
+        alert('Error creando equipo: ' + error.message);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
-  const handleRemoveTeam = (id) => {
-    setTeams(teams.filter(t => t.id !== id));
+  const handleRemoveTeam = async (id) => {
+    try {
+        await deleteTeam(id);
+        setTeams(teams.filter(t => t.id !== id));
+    } catch (error) {
+        alert('Error eliminando equipo: ' + error.message);
+    }
   };
 
   const changeStep = (newStep) => {
@@ -213,7 +334,6 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
                 <div>
                   <label className="block text-black text-lg font-bold mb-2">Fecha Limite</label>
                   <div className="relative w-48">
-                    {/* input de fecha bonito */}
                     <input 
                       type="text" 
                       placeholder="DD/MM/AAAA"
@@ -222,8 +342,6 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
                       onClick={() => dateInputRef.current?.showPicker()}
                       className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-kanbas-blue text-gray-800 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue cursor-pointer" 
                     />
-                    
-                    {/* input de fecha real pero escondido */}
                     <input 
                       ref={dateInputRef}
                       type="date" 
@@ -232,8 +350,6 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
                       className="absolute inset-0 opacity-0 pointer-events-none w-full h-full"
                       tabIndex={-1}
                     />
-
-                    {/* icono para abrir el calendario */}
                     <div 
                       onClick={() => dateInputRef.current?.showPicker()}
                       className="absolute right-4 top-1/2 transform -translate-y-1/2 text-kanbas-blue cursor-pointer hover:text-blue-600 transition"
@@ -258,7 +374,19 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
                 <div>
                   <label className="block text-black text-lg font-bold mb-2">Usuario / Email</label>
                   <div className="flex items-center space-x-2">
-                    <input type="text" placeholder="nombre.apellido@empresa.com" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-kanbas-blue text-gray-800 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue" />
+                    <input 
+                      type="text" 
+                      placeholder="nombre.apellido@empresa.com" 
+                      value={emailInput} 
+                      onChange={(e) => {
+                        setEmailInput(e.target.value);
+                        if (errors.assignUserError) setErrors({ ...errors, assignUserError: false });
+                      }}
+                      onFocus={() => {
+                        if (errors.assignUserError) setErrors({ ...errors, assignUserError: false });
+                      }}
+                      className={`w-full px-4 py-3 rounded-full bg-[#cbd5e1] border text-gray-800 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue ${errors.assignUserError ? 'border-red-500 ring-1 ring-red-500' : 'border-kanbas-blue'}`} 
+                    />
                     <button onClick={() => handleAddUser(setProductOwner, emailInput, setEmailInput)} className="bg-kanbas-blue text-white rounded-full p-2 hover:bg-blue-600 transition shadow-md">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                     </button>
@@ -272,7 +400,14 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
                 )}
                 <div className="flex items-center justify-end space-x-4 pt-12">
                   <button type="button" onClick={() => changeStep(1)} className="text-kanbas-blue font-bold hover:underline text-lg">&lt; Anterior</button>
-                  <button type="button" onClick={() => changeStep(3)} className="bg-kanbas-blue text-white font-bold py-3 px-8 rounded-full hover:bg-blue-600 transition duration-300 shadow-md">Siguiente &gt;</button>
+                  <button 
+                    type="button" 
+                    onClick={() => handleStepTransition(3)} 
+                    disabled={!productOwner}
+                    className={`font-bold py-3 px-8 rounded-full transition duration-300 shadow-md ${!productOwner ? 'bg-gray-400 cursor-not-allowed text-gray-200' : 'bg-kanbas-blue text-white hover:bg-blue-600'}`}
+                  >
+                    Siguiente &gt;
+                  </button>
                 </div>
               </div>
             </div>
@@ -286,7 +421,19 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
                 <div>
                   <label className="block text-black text-lg font-bold mb-2">Usuario / Email</label>
                   <div className="flex items-center space-x-2">
-                    <input type="text" placeholder="nombre.apellido@empresa.com" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-kanbas-blue text-gray-800 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue" />
+                    <input 
+                      type="text" 
+                      placeholder="nombre.apellido@empresa.com" 
+                      value={emailInput} 
+                      onChange={(e) => {
+                        setEmailInput(e.target.value);
+                        if (errors.assignSdmError) setErrors({...errors, assignSdmError: false});
+                      }} 
+                      onFocus={() => {
+                        if (errors.assignSdmError) setErrors({...errors, assignSdmError: false});
+                      }}
+                      className={`w-full px-4 py-3 rounded-full bg-[#cbd5e1] border text-gray-800 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue ${errors.assignSdmError ? 'border-red-500 ring-1 ring-red-500' : 'border-kanbas-blue'}`} 
+                    />
                     <button onClick={() => handleAddUser(setSdm, emailInput, setEmailInput)} className="bg-kanbas-blue text-white rounded-full p-2 hover:bg-blue-600 transition shadow-md">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                     </button>
@@ -300,7 +447,14 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
                 )}
                 <div className="flex items-center justify-end space-x-4 pt-12">
                   <button type="button" onClick={() => changeStep(2)} className="text-kanbas-blue font-bold hover:underline text-lg">&lt; Anterior</button>
-                  <button type="button" onClick={() => changeStep(4)} className="bg-kanbas-blue text-white font-bold py-3 px-8 rounded-full hover:bg-blue-600 transition duration-300 shadow-md">Siguiente &gt;</button>
+                  <button 
+                    type="button" 
+                    onClick={() => handleStepTransition(4)} 
+                    disabled={!sdm}
+                    className={`font-bold py-3 px-8 rounded-full transition duration-300 shadow-md ${!sdm ? 'bg-gray-400 cursor-not-allowed text-gray-200' : 'bg-kanbas-blue text-white hover:bg-blue-600'}`}
+                  >
+                    Siguiente &gt;
+                  </button>
                 </div>
               </div>
             </div>
@@ -316,15 +470,7 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
                     <div key={team.id} className="bg-[#cbd5e1] rounded-full px-4 py-2 flex items-center space-x-2 group cursor-pointer hover:bg-[#b0c4de] transition relative pr-16">
                       <span className="text-black font-medium">{team.name}</span>
                       
-                      {/* acciones al pasar el mouse */}
                       <div className="absolute right-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {/* editar (no hace nada todavia) */}
-                        <button className="text-gray-600 hover:text-kanbas-blue">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                          </svg>
-                        </button>
-                        {/* borrar */}
                         <button onClick={(e) => { e.stopPropagation(); handleRemoveTeam(team.id); }} className="text-gray-600 hover:text-red-500">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -384,7 +530,6 @@ const CreateProjectModal = ({ isOpen, onClose, onNext }) => {
                         <span className="text-black font-medium">{member.name}</span>
                         <div className="bg-kanbas-blue rounded-full p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg></div>
                         
-                        {/* Trash Icon on Hover */}
                         <button 
                           onClick={() => handleRemoveTeamMember(index)}
                           className="absolute right-2 text-gray-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"

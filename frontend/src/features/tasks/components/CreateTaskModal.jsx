@@ -1,56 +1,179 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { getTeamsByProject, getTeamMembers } from '../../teams/services/teamsService';
+import { createTask, updateTask, getTaskById } from '../../tasks/services/tasksService';
 
-const CreateTaskModal = ({ isOpen, onClose, taskToEdit }) => {
+const CreateTaskModal = ({ isOpen, onClose, taskToEdit, project }) => {
   // estados de los datos
   const [taskName, setTaskName] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedTeam, setSelectedTeam] = useState('Backend'); // por defecto pa probar
+  const [selectedTeamId, setSelectedTeamId] = useState(''); // ID del equipo
   const [deadline, setDeadline] = useState('');
-  const [priority, setPriority] = useState('Alta'); // por defecto pa probar
-  const [selectedMember, setSelectedMember] = useState('');
-  const [assignedMembers, setAssignedMembers] = useState([]);
+  const [priority, setPriority] = useState('1'); // 1: Alta, 2: Media, 3: Baja (segun backend quizas diferente, asumiremos int)
+  const [selectedMemberId, setSelectedMemberId] = useState('');
+  const [assignedMembers, setAssignedMembers] = useState([]); // [{id, name}]
 
-  // opciones de mentira
-  const teams = ['Backend', 'Frontend', 'Design', 'QA'];
-  const priorities = ['Baja', 'Media', 'Alta'];
-  const availableMembers = ['Nadie', 'Pedro Parques', 'Jose Cortez', 'Ana Torres', 'Miguel Pacheco'];
+  // estados de carga de datos
+  const [teams, setTeams] = useState([]);
+  const [availableMembers, setAvailableMembers] = useState([]);
+  const [loadingTeams, setLoadingTeams] = useState(false);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+
+  // opciones estáticas
+  const priorities = [
+      { id: 1, label: 'Alta' },
+      { id: 2, label: 'Media' },
+      { id: 3, label: 'Baja' }
+  ];
 
   // cosas de animacion
   const [hasAnimated, setHasAnimated] = useState(false);
   const containerRef = useRef(null);
   const dateInputRef = useRef(null);
 
-  // limpiar o llenar cuando se abre
+  // Cargar equipos al abrir o cambiar proyecto
   useEffect(() => {
-    if (isOpen) {
-      if (taskToEdit) {
-        setTaskName(taskToEdit.title || '');
-        setDescription(taskToEdit.description || '');
-        setSelectedTeam(taskToEdit.team || 'Backend');
-        setDeadline(taskToEdit.deadline || '');
-        setPriority(taskToEdit.priority || 'Alta');
-        
-        // si ocupamos parsear los miembros pues aqui, sino directo
-        setAssignedMembers(taskToEdit.members || []);
-      } else {
-        setTaskName('');
-        setDescription('');
-        setSelectedTeam('Backend');
-        setDeadline('');
-        setPriority('Alta');
-        setSelectedMember('Nadie');
-        setAssignedMembers([]);
+      const fetchTeams = async () => {
+          if (isOpen && project?.id) {
+              try {
+                  setLoadingTeams(true);
+                  const data = await getTeamsByProject(project.id);
+                  setTeams(data);
+                  if (data.length > 0 && !taskToEdit) {
+                      setSelectedTeamId(data[0].idEquipo || data[0].idequipo); // Preseleccionar primero
+                  }
+              } catch (error) {
+                  console.error("Error loading teams:", error);
+              } finally {
+                  setLoadingTeams(false);
+              }
+          }
+      };
+      
+      fetchTeams();
+  }, [isOpen, project, taskToEdit]);
+
+  // Cargar miembros cuando cambia el equipo seleccionado
+  useEffect(() => {
+      const fetchMembers = async () => {
+          if (selectedTeamId) {
+              try {
+                  setLoadingMembers(true);
+                  const data = await getTeamMembers(selectedTeamId);
+                  setAvailableMembers(data);
+                  setSelectedMemberId(''); // Reset seleccion de miembro
+              } catch (error) {
+                  console.error("Error loading members:", error);
+                  setAvailableMembers([]);
+              } finally {
+                  setLoadingMembers(false);
+              }
+          } else {
+              setAvailableMembers([]);
+          }
+      };
+
+      fetchMembers();
+  }, [selectedTeamId]);
+
+
+  // Cargar detalles de la tarea si estamos editando
+  useEffect(() => {
+    const fetchTaskDetails = async () => {
+        if (isOpen && taskToEdit && project?.id) {
+            try {
+                // Fetch full details
+                const fullTask = await getTaskById(taskToEdit.id, project.id);
+                
+                setTaskName(fullTask.titulo || fullTask.title || '');
+                setDescription(fullTask.descripcion || fullTask.description || '');
+                setSelectedTeamId(fullTask.idEquipo || fullTask.idequipo || '');
+                setDeadline(fullTask.fechaLimite || fullTask.deadline || '');
+                setPriority(fullTask.prioridad || fullTask.priority || 1);
+                
+                // Map asignados
+                if (fullTask.asignados) {
+                    const mappedMembers = fullTask.asignados.map(m => ({
+                        id: m.idusuario || m.idUsuario, // Ojo: en backend asignados trae idusuario, no idintegrante? Revisar imagen. 
+                        // Ah, la imagen dice "asignados": [ { "idusuario": 7 ... }]. 
+                        // Pero para crear tarea usamos idIntegrante. 
+                        // El backend devuelve idUsuario en asignados? 
+                        // La imagen muestra: "asignados": [ { "idusuario": 7, "nombre": "Jose"... } ]
+                        // Pero create task pide "integrantes": [id1, id2].
+                        // El payload de create task pide IDs de integrantes? "integrantes": [1, 2] (ids 1 y 2).
+                        // Necesitamos saber el ID INTEGRANTE de esos usuarios.
+                        // La imagen de fetch integrantes dice "idintegrante": 1, "idusuario": 7.
+                        // Entonces si la tarea devuelve idusuario, tenemos que matchearlos con los integrantes del equipo seleccionado para obtener el idintegrante.
+                        // Esto es tricky.
+                        // Solucion: Cargar los miembros del equipo (que trae idusuario y idintegrante) y matchear por idusuario.
+                        // Pero `availableMembers` se carga cuando `selectedTeamId` cambia.
+                        // Asi que primero seteamos selectedTeamId, eso dispara el fetch de miembros, y LUEGO (o a la vez) seteamos los asignados.
+                        // Problema: useEffect de members es async.
+                        name: `${m.nombre} ${m.apellido}`.trim(),
+                        idUsuario: m.idusuario || m.idUsuario 
+                    }));
+                    // Guardamos temporalmente con idUsuario y luego en el render/submit resolvemos?
+                    // Mejor esperamos a que carguen los miembros para matchear.
+                    setAssignedMembers(mappedMembers);
+                } else {
+                    setAssignedMembers([]);
+                }
+
+            } catch (error) {
+                console.error("Error loading task details:", error);
+            }
+        } else if (isOpen && !taskToEdit) {
+            // Reset for create
+            setTaskName('');
+            setDescription('');
+            setDeadline('');
+            setPriority(1);
+            setSelectedMemberId('');
+            setAssignedMembers([]);
+            // Team se maneja en fetchTeams
+        }
+        setHasAnimated(false);
+    };
+
+    fetchTaskDetails();
+  }, [isOpen, taskToEdit, project]);
+
+  // Efecto para reconciliar miembros asignados (recuperar idIntegrante) una vez que availableMembers cargó
+  useEffect(() => {
+      if (availableMembers.length > 0 && assignedMembers.length > 0) {
+          // Intentar enriquecer los miembros asignados con idIntegrante si les falta
+          const enriched = assignedMembers.map(am => {
+              if (am.id) return am; // Ya tiene id (idIntegrante)
+              
+              const match = availableMembers.find(m => (m.idusuario || m.idUsuario) === am.idUsuario);
+              if (match) {
+                  return {
+                      ...am,
+                      id: match.idintegrante || match.idIntegrante // Ahora si es el idIntegrante
+                  };
+              }
+              return am;
+          });
+          
+          // Solo actualizar si hubo cambios para evitar loop infinito
+          if (JSON.stringify(enriched) !== JSON.stringify(assignedMembers)) {
+               setAssignedMembers(enriched);
+          }
       }
-      setHasAnimated(false);
-    }
-  }, [isOpen, taskToEdit]);
+  }, [availableMembers]); // Ojo con assignedMembers aqui para no loop
 
   if (!isOpen) return null;
 
   const handleAddMember = () => {
-    if (selectedMember && selectedMember !== 'Nadie' && !assignedMembers.some(m => m.name === selectedMember)) {
-      setAssignedMembers([...assignedMembers, { name: selectedMember, avatar: null }]);
-      setSelectedMember('Nadie');
+    if (selectedMemberId) {
+        const member = availableMembers.find(m => (m.idintegrante || m.idIntegrante).toString() === selectedMemberId.toString());
+        if (member && !assignedMembers.some(m => m.id === (member.idintegrante || member.idIntegrante))) {
+            setAssignedMembers([...assignedMembers, { 
+                id: member.idintegrante || member.idIntegrante, 
+                name: `${member.nombre} ${member.apellido}`.trim(),
+                avatar: null 
+            }]);
+            setSelectedMemberId('');
+        }
     }
   };
 
@@ -58,6 +181,42 @@ const CreateTaskModal = ({ isOpen, onClose, taskToEdit }) => {
     const updated = [...assignedMembers];
     updated.splice(index, 1);
     setAssignedMembers(updated);
+  };
+
+  const handleSubmit = async () => {
+      try {
+          if (!taskName || !description || !selectedTeamId) {
+              alert("Por favor completa los campos obligatorios");
+              return;
+          }
+
+          // Filtrar miembros que no tengan ID valido (idIntegrante)
+          const validMembers = assignedMembers
+            .map(m => m.id)
+            .filter(id => id !== undefined && id !== null);
+
+          const payload = {
+              idProyecto: project.id,
+              idEquipo: parseInt(selectedTeamId),
+              titulo: taskName,
+              descripcion: description,
+              prioridad: parseInt(priority),
+              fechaLimite: deadline ? new Date(deadline).toISOString() : null,
+              integrantes: validMembers
+          };
+
+          if (taskToEdit) {
+              await updateTask(taskToEdit.id, project.id, payload);
+          } else {
+              await createTask(payload);
+          }
+          
+          onClose();
+          window.location.reload(); 
+      } catch (error) {
+          console.error("Error saving task:", error);
+          alert("Error al guardar la tarea: " + error.message);
+      }
   };
 
   return (
@@ -106,11 +265,16 @@ const CreateTaskModal = ({ isOpen, onClose, taskToEdit }) => {
                 <label className="block text-black text-lg font-bold mb-2">Equipo *</label>
                 <div className="relative">
                     <select 
-                        value={selectedTeam}
-                        onChange={(e) => setSelectedTeam(e.target.value)}
+                        value={selectedTeamId}
+                        onChange={(e) => setSelectedTeamId(e.target.value)}
                         className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-kanbas-blue text-gray-800 focus:outline-none focus:ring-2 focus:ring-kanbas-blue appearance-none cursor-pointer"
+                        disabled={loadingTeams}
                     >
-                        {teams.map(t => <option key={t} value={t}>{t}</option>)}
+                        {loadingTeams ? <option>Cargando...</option> : teams.map(t => (
+                            <option key={t.idEquipo || t.idequipo} value={t.idEquipo || t.idequipo}>
+                                {t.nombreEquipo || t.nombreequipo}
+                            </option>
+                        ))}
                     </select>
                     <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-kanbas-blue">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -158,7 +322,7 @@ const CreateTaskModal = ({ isOpen, onClose, taskToEdit }) => {
                         onChange={(e) => setPriority(e.target.value)}
                         className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-kanbas-blue text-gray-800 focus:outline-none focus:ring-2 focus:ring-kanbas-blue appearance-none cursor-pointer"
                     >
-                        {priorities.map(p => <option key={p} value={p}>{p}</option>)}
+                        {priorities.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
                     </select>
                     <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-kanbas-blue">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -175,11 +339,17 @@ const CreateTaskModal = ({ isOpen, onClose, taskToEdit }) => {
               <div className="flex items-center space-x-2 mb-4">
                  <div className="relative w-full">
                     <select 
-                        value={selectedMember}
-                        onChange={(e) => setSelectedMember(e.target.value)}
+                        value={selectedMemberId}
+                        onChange={(e) => setSelectedMemberId(e.target.value)}
                         className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-kanbas-blue text-gray-800 focus:outline-none focus:ring-2 focus:ring-kanbas-blue appearance-none cursor-pointer"
+                        disabled={loadingMembers}
                     >
-                        {availableMembers.map(m => <option key={m} value={m}>{m}</option>)}
+                        <option value="">Selecciona un integrante</option>
+                        {loadingMembers ? <option>Cargando...</option> : availableMembers.map(m => (
+                            <option key={m.idintegrante || m.idIntegrante} value={m.idintegrante || m.idIntegrante}>
+                                {m.nombre} {m.apellido}
+                            </option>
+                        ))}
                     </select>
                     <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-kanbas-blue">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -224,7 +394,7 @@ const CreateTaskModal = ({ isOpen, onClose, taskToEdit }) => {
             {/* botones de accion */}
             <div className="flex items-center justify-end space-x-4 pt-4">
               <button type="button" onClick={onClose} className="text-kanbas-blue font-bold hover:underline text-lg">Cancelar</button>
-              <button type="button" onClick={onClose} className="bg-kanbas-blue text-white font-bold py-3 px-8 rounded-full hover:bg-blue-600 transition duration-300 shadow-md">Aceptar</button>
+              <button type="button" onClick={handleSubmit} className="bg-kanbas-blue text-white font-bold py-3 px-8 rounded-full hover:bg-blue-600 transition duration-300 shadow-md">Aceptar</button>
             </div>
           </form>
         </div>

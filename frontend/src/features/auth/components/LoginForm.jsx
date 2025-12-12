@@ -1,17 +1,63 @@
 import React, { useState } from 'react';
 import logoColor from '../../../assets/logo_color.png';
 
-const LoginForm = ({ onSwitchToSignup, onSubmit }) => {
+const LoginForm = ({ onSwitchToLogin, onSwitchToSignup, onSubmit }) => {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (onSubmit) {
-      onSubmit({ identifier, password });
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    if (!identifier.trim()) {
+      newErrors.identifier = 'El usuario/email es obligatorio';
+      isValid = false;
+    }
+
+    if (!password.trim()) {
+      newErrors.password = 'La contraseña es obligatoria';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleFocus = (field) => {
+    if (errors[field] || errors.general) {
+      setErrors(prev => ({ ...prev, [field]: null, general: null }));
     }
   };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    if (onSubmit) {
+      setIsSubmitting(true);
+      try {
+        await onSubmit({ identifier, password });
+      } catch (error) {
+        setErrors({ general: 'Credenciales inválidas. Inténtalo de nuevo.' });
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
+  const getInputClass = (fieldName) => {
+    const hasError = errors[fieldName] || errors.general;
+    return `w-full px-4 py-3 rounded-full bg-[#cbd5e1] border text-gray-700 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue focus:border-transparent ${
+      hasError ? 'border-red-500 ring-1 ring-red-500' : 'border-[#8da3b6]'
+    }`;
+  };
+
+  const ErrorMessage = ({ message }) => (
+    message ? <p className="text-red-500 text-sm mt-1 ml-4 animate-fade-in">{message}</p> : null
+  );
 
   return (
     <div className="min-h-screen flex items-center justify-center animate-gradient-bg">
@@ -20,7 +66,7 @@ const LoginForm = ({ onSwitchToSignup, onSubmit }) => {
           <img src={logoColor} alt="Kanbas Logo" className="h-20 w-auto" />
         </div>
 
-        <form className="space-y-6" onSubmit={handleSubmit}>
+        <form className="space-y-6" onSubmit={handleSubmit} noValidate>
           <div>
             <label className="block text-gray-800 text-lg font-medium mb-2">
               Usuario/E-mail
@@ -30,8 +76,10 @@ const LoginForm = ({ onSwitchToSignup, onSubmit }) => {
               placeholder="Ejemplo@correo.com"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-[#8da3b6] text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-kanbas-blue focus:border-transparent"
+              onFocus={() => handleFocus('identifier')}
+              className={getInputClass('identifier')}
             />
+            <ErrorMessage message={errors.identifier} />
           </div>
 
           <div>
@@ -44,7 +92,8 @@ const LoginForm = ({ onSwitchToSignup, onSubmit }) => {
                 placeholder="********"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-[#8da3b6] text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-kanbas-blue focus:border-transparent pr-12"
+                onFocus={() => handleFocus('password')}
+                className={`${getInputClass('password')} pr-12`}
               />
               <button
                 type="button"
@@ -63,6 +112,8 @@ const LoginForm = ({ onSwitchToSignup, onSubmit }) => {
                 )}
               </button>
             </div>
+            <ErrorMessage message={errors.password} />
+            <ErrorMessage message={errors.general} />
           </div>
 
           <div className="flex items-center justify-between pt-4">
@@ -75,9 +126,10 @@ const LoginForm = ({ onSwitchToSignup, onSubmit }) => {
             </button>
             <button
               type="submit"
-              className="bg-kanbas-blue text-white font-bold py-3 px-8 rounded-full hover:bg-blue-600 transition duration-300 shadow-md"
+              disabled={isSubmitting}
+              className="bg-kanbas-blue text-white font-bold py-3 px-8 rounded-full hover:bg-blue-600 transition duration-300 shadow-md disabled:bg-gray-400"
             >
-              Iniciar Sesion
+              {isSubmitting ? 'Iniciando...' : 'Iniciar Sesion'}
             </button>
           </div>
         </form>

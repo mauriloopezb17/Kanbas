@@ -1,52 +1,47 @@
 // src/features/auth/services/authService.js
 
-const API_URL = 'http://localhost:3000/api'; // Marcador de posición
- 
+const API_URL = 'http://localhost:3000/api';
+
 export const login = async (credentials) => {
-  // Inicio de sesión falso para vista previa
-  if (credentials.identifier === 'Pancake99' && credentials.password === '12345678') {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          user: {
-            username: 'Pancake99',
-            firstName: 'Juan',
-            lastName: 'Perez',
-            email: 'pancake99@example.com'
-          },
-          token: 'fake-jwt-token'
-        });
-      }, 500); // Simular retraso de red
+  try {
+    const response = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(credentials),
     });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Login failed');
+    }
+
+    return data;
+  } catch (error) {
+    throw error;
   }
-
-  // Implementación real (comentada por ahora)
-  /*
-  const response = await fetch(`${API_URL}/auth/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(credentials),
-  });
-
-  if (!response.ok) {
-    throw new Error('Login failed');
-  }
-
-  return response.json();
-  */
-  throw new Error('Invalid credentials');
 };
 
 export const register = async (userData) => {
-  // Registro falso
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        user: { ...userData },
-        token: 'fake-jwt-token'
-      });
-    }, 500);
-  });
+  try {
+    const response = await fetch(`${API_URL}/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Registration failed');
+    }
+
+    return data;
+  } catch (error) {
+    throw error;
+  }
 };

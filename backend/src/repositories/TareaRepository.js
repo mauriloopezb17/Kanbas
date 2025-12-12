@@ -58,6 +58,20 @@ class TareaRepository {
     return new Tarea(result.rows[0]);
   }
 
+  async updateTarea(idTarea, datos) {
+    const { titulo, descripcion, prioridad, fechaLimite, idEquipo } = datos;
+    const result = await pool.query(
+      `UPDATE tareas 
+       SET titulo = $1, descripcion = $2, prioridad = $3, fechalimite = $4, idequipo = $5
+       WHERE idtarea = $6
+       RETURNING *`,
+      [titulo, descripcion, prioridad, fechaLimite, idEquipo, idTarea]
+    );
+
+    if (result.rowCount === 0) return null;
+    return new Tarea(result.rows[0]);
+  }
+
   async updateEquipo(idTarea, idEquipo) {
     await pool.query(`UPDATE tareas SET idequipo = $1 WHERE idtarea = $2`, [
       idEquipo,

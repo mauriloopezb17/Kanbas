@@ -4,22 +4,66 @@ import LoginForm from './features/auth/components/LoginForm';
 import SignupForm from './features/auth/components/SignupForm';
 import ProjectsDashboard from './features/projects/pages/ProjectsDashboard';
 import BoardPage from './features/board/pages/BoardPage';
-import { login } from './features/auth/services/authService';
+import { login, register } from './features/auth/services/authService';
 
 function App() {
   const [user, setUser] = useState(null);
   const [currentProject, setCurrentProject] = useState(null);
   const [isLoginView, setIsLoginView] = useState(true);
 
+  // Efecto para persistencia
+  React.useEffect(() => {
+    // 1. Recuperar usuario del localStorage
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+
+    // 2. Recuperar proyecto actual
+    const storedProject = localStorage.getItem('currentProject');
+    if (storedProject) {
+      setCurrentProject(JSON.parse(storedProject));
+    }
+  }, []);
+
   const handleLogin = async (credentials) => {
     try {
-      // Usar servicio de login falso
-      // En una app real, manejarías estados de carga aquí
       const response = await login(credentials);
-      setUser(response.user);
+      localStorage.setItem('token', response.token); 
+      localStorage.setItem('user', JSON.stringify(response.usuario)); // Persistir usuario
+      setUser(response.usuario); 
     } catch (error) {
-      alert('Login failed: ' + error.message);
+      throw error;
     }
+  };
+
+  const handleSignup = async (userData) => {
+    try {
+      const response = await register(userData);
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('user', JSON.stringify(response.usuario)); // Persistir usuario
+      setUser(response.usuario);
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('currentProject');
+    setUser(null);
+    setCurrentProject(null);
+  };
+
+  const handleProjectSelect = (project) => {
+    setCurrentProject(project);
+    localStorage.setItem('currentProject', JSON.stringify(project));
+  };
+
+  const handleBackToDashboard = () => {
+    setCurrentProject(null);
+    localStorage.removeItem('currentProject');
   };
 
   // Si el usuario está logueado
@@ -28,15 +72,21 @@ function App() {
       return (
         <div className="animate-fade-in">
           <BoardPage 
+            user={user}
             project={currentProject} 
-            onBack={() => setCurrentProject(null)} 
+            onBack={handleBackToDashboard}
+            onLogout={handleLogout}
           />
         </div>
       );
     }
     return (
       <div className="animate-fade-in">
-        <ProjectsDashboard user={user} onProjectClick={setCurrentProject} />
+        <ProjectsDashboard 
+          user={user} 
+          onProjectClick={handleProjectSelect} 
+          onLogout={handleLogout} 
+        />
       </div>
     );
   }
@@ -49,7 +99,10 @@ function App() {
           onSubmit={handleLogin}
         />
       ) : (
-        <SignupForm onSwitchToLogin={() => setIsLoginView(true)} />
+        <SignupForm 
+          onSwitchToLogin={() => setIsLoginView(true)} 
+          onSubmit={handleSignup}
+        />
       )}
     </div>
   );

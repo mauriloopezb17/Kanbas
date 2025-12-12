@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import NewMessageModal from './NewMessageModal';
+import { getInboxMessages } from '../features/messages/services/messagesService';
 
 const NotificationsPanel = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState('proyecto');
   const [isExiting, setIsExiting] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+
+  const [messages, setMessages] = useState([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
 
   React.useEffect(() => {
     if (isOpen) {
@@ -17,6 +21,24 @@ const NotificationsPanel = ({ isOpen, onClose }) => {
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
+
+  React.useEffect(() => {
+      const fetchMessages = async () => {
+          if (isOpen && activeTab === 'inbox') {
+              setLoadingMessages(true);
+              try {
+                  const data = await getInboxMessages();
+                  setMessages(data);
+              } catch (error) {
+                  console.error("Error fetching inbox:", error);
+              } finally {
+                  setLoadingMessages(false);
+              }
+          }
+      };
+      
+      fetchMessages();
+  }, [isOpen, activeTab]);
 
   if (!isOpen && !showPanel) return null;
 
@@ -115,18 +137,25 @@ const NotificationsPanel = ({ isOpen, onClose }) => {
 
           {activeTab === 'inbox' && (
             <>
-              {/* Message Item */}
-              <div className="bg-[#cbd5e1] rounded-3xl p-5 relative">
-                <div className="flex justify-between items-start mb-1">
-                  <span className="font-bold text-gray-800">De: Orlando Rivera</span>
+              {loadingMessages && <p className="text-gray-500 text-center text-sm">Cargando mensajes...</p>}
+              {!loadingMessages && messages.length === 0 && (
+                 <p className="text-gray-500 text-center text-sm">No hay mensajes.</p>
+              )}
+              
+              {!loadingMessages && messages.map(msg => (
+                <div key={msg.idmensaje} className="bg-[#cbd5e1] rounded-3xl p-5 relative animate-fade-in">
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="font-bold text-gray-800">De: {msg.nombre_emisor || 'Desconocido'}</span>
+                    </div>
+                    <p className="text-gray-800 text-sm font-medium mb-1">
+                      {msg.contenido}
+                    </p>
+                    <p className="text-gray-500 text-xs text-right">
+                        {new Date(msg.fecha).toLocaleString()}
+                    </p>
                 </div>
-                <p className="text-gray-800 text-sm font-medium mb-1">
-                  Cumplen la mitad de RF en su Mockup
-                </p>
-                <p className="text-gray-500 text-xs text-right">12/3/25 10:45 PM</p>
-              </div>
+              ))}
 
-              {/* FAB */}
               {/* FAB */}
               <button 
                 onClick={() => setIsMessageModalOpen(true)}

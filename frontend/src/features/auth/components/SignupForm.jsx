@@ -1,72 +1,203 @@
 import React, { useState } from 'react';
+import logoColor from '../../../assets/logo_color.png';
 
-const SignupForm = ({ onSwitchToLogin }) => {
+const SignupForm = ({ onSwitchToLogin, onSubmit }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    usuario: '',
+    nombre: '',
+    apellido: '',
+    email: '',
+    password: ''
+  });
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    // Validar usuario
+    if (!formData.usuario.trim()) {
+      newErrors.usuario = 'El usuario es obligatorio';
+      isValid = false;
+    }
+
+    // Validar nombre
+    if (!formData.nombre.trim()) {
+      newErrors.nombre = 'El nombre es obligatorio';
+      isValid = false;
+    }
+
+    // Validar apellido
+    if (!formData.apellido.trim()) {
+      newErrors.apellido = 'El apellido es obligatorio';
+      isValid = false;
+    }
+
+    // Validar email
+    if (!formData.email.trim()) {
+      newErrors.email = 'El email es obligatorio';
+      isValid = false;
+    } else if (!emailRegex.test(formData.email)) {
+      newErrors.email = 'Formato de email inválido';
+      isValid = false;
+    }
+
+    // Validar password
+    if (!formData.password.trim()) {
+      newErrors.password = 'La contraseña es obligatoria';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
+
+  const handleFocus = (field) => {
+    if (errors[field]) {
+      setErrors({
+        ...errors,
+        [field]: null
+      });
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    if (onSubmit) {
+      setIsSubmitting(true);
+      try {
+        await onSubmit(formData);
+      } catch (error) {
+        // Manejo básico de errores de backend
+        const msg = error.message.toLowerCase();
+        if (msg.includes('email') || msg.includes('correo')) {
+          setErrors(prev => ({ ...prev, email: 'Este email ya está registrado' }));
+        } else if (msg.includes('usuario') || msg.includes('user')) {
+          setErrors(prev => ({ ...prev, usuario: 'Este usuario ya existe' }));
+        } else {
+          // Error genérico si no encaja
+          alert('Error al registrar: ' + error.message);
+        }
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
+  const getInputClass = (fieldName) => {
+    return `w-full px-4 py-3 rounded-full bg-[#cbd5e1] border text-gray-700 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue focus:border-transparent ${
+      errors[fieldName] ? 'border-red-500 ring-1 ring-red-500' : 'border-[#8da3b6]'
+    }`;
+  };
+
+  const ErrorMessage = ({ message }) => (
+    message ? <p className="text-red-500 text-sm mt-1 ml-4 animate-fade-in">{message}</p> : null
+  );
 
   return (
     <div className="min-h-screen flex items-center justify-center animate-gradient-bg">
       <div className="bg-[#f0f0f5] p-8 rounded-[2rem] shadow-lg w-full max-w-2xl mx-4">
         <div className="flex justify-center mb-8">
-          <h1 className="text-6xl font-bold text-kanbas-blue drop-shadow-[4px_4px_0px_rgba(92,92,138,0.5)] tracking-wide font-sans">
-            kanbas
-          </h1>
+          <img src={logoColor} alt="Kanbas Logo" className="h-20 w-auto" />
         </div>
 
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit} noValidate>
           <div>
             <label className="block text-gray-800 text-lg font-medium mb-1">
-              Nombre de Usuario
+              Nombre de Usuario *
             </label>
             <input
               type="text"
+              name="usuario"
+              value={formData.usuario}
+              onChange={handleChange}
+              onFocus={() => handleFocus('usuario')}
               placeholder="nombreEjemplo01"
-              className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-[#8da3b6] text-gray-700 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue focus:border-transparent"
+              required
+              className={getInputClass('usuario')}
             />
+            <ErrorMessage message={errors.usuario} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-gray-800 text-lg font-medium mb-1">
-                Nombres
+                Nombres *
               </label>
               <input
                 type="text"
+                name="nombre"
+                value={formData.nombre}
+                onChange={handleChange}
+                onFocus={() => handleFocus('nombre')}
                 placeholder="Juan"
-                className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-[#8da3b6] text-gray-700 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue focus:border-transparent"
+                required
+                className={getInputClass('nombre')}
               />
+              <ErrorMessage message={errors.nombre} />
             </div>
             <div>
               <label className="block text-gray-800 text-lg font-medium mb-1">
-                Apellidos
+                Apellidos *
               </label>
               <input
                 type="text"
+                name="apellido"
+                value={formData.apellido}
+                onChange={handleChange}
+                onFocus={() => handleFocus('apellido')}
                 placeholder="Perez"
-                className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-[#8da3b6] text-gray-700 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue focus:border-transparent"
+                required
+                className={getInputClass('apellido')}
               />
+              <ErrorMessage message={errors.apellido} />
             </div>
           </div>
 
           <div>
             <label className="block text-gray-800 text-lg font-medium mb-1">
-              E-mail
+              E-mail *
             </label>
             <input
               type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              onFocus={() => handleFocus('email')}
               placeholder="Ejemplo@correo.com"
-              className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-[#8da3b6] text-gray-700 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue focus:border-transparent"
+              required
+              className={getInputClass('email')}
             />
+            <ErrorMessage message={errors.email} />
           </div>
 
           <div>
             <label className="block text-gray-800 text-lg font-medium mb-1">
-              Contraseña
+              Contraseña *
             </label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                onFocus={() => handleFocus('password')}
                 placeholder="********"
-                className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-[#8da3b6] text-gray-700 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-kanbas-blue focus:border-transparent pr-12"
+                required
+                className={`${getInputClass('password')} pr-12`}
               />
               <button
                 type="button"
@@ -85,6 +216,7 @@ const SignupForm = ({ onSwitchToLogin }) => {
                 )}
               </button>
             </div>
+            <ErrorMessage message={errors.password} />
           </div>
 
           <div className="flex items-center justify-between pt-6">
@@ -97,9 +229,10 @@ const SignupForm = ({ onSwitchToLogin }) => {
             </button>
             <button
               type="submit"
-              className="bg-kanbas-blue text-white font-bold py-3 px-8 rounded-full hover:bg-blue-600 transition duration-300 shadow-md"
+              disabled={isSubmitting}
+              className="bg-kanbas-blue text-white font-bold py-3 px-8 rounded-full hover:bg-blue-600 transition duration-300 shadow-md disabled:bg-gray-400"
             >
-              Crear cuenta
+              {isSubmitting ? 'Registrando...' : 'Crear cuenta'}
             </button>
           </div>
         </form>
@@ -107,5 +240,6 @@ const SignupForm = ({ onSwitchToLogin }) => {
     </div>
   );
 };
+
 
 export default SignupForm;

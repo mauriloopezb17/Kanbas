@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createComment, getComments, deleteComment } from '../services/commentsService';
 
 const TaskCommentsModal = ({ isOpen, onClose, task, onAddComment }) => {
   const [newComment, setNewComment] = useState('');
@@ -8,42 +9,62 @@ const TaskCommentsModal = ({ isOpen, onClose, task, onAddComment }) => {
   const [hasAnimated, setHasAnimated] = useState(false);
   const containerRef = useRef(null);
 
+  // ...
+  const [loading, setLoading] = useState(false);
+
   // cargar los comentarios cuando se abre esto
   useEffect(() => {
-    if (isOpen) {
-      if (task && task.comments) {
-        setComments(task.comments);
-      } else {
-        // datos falsos pa que se vea algo
-        setComments([
-            { id: 1, user: 'Jose Cortez', text: 'Comentario de Ejemplo', date: '11/30/25 10:45 PM' },
-            { id: 2, user: 'Pepe Lopez', text: 'Comentario de Ejemplo', date: '11/30/25 10:45 PM' }
-        ]);
-      }
-      setHasAnimated(false);
+    if (isOpen && task && task.id) {
+       fetchComments();
+       setHasAnimated(false);
+    } else {
+        setComments([]);
     }
   }, [task, isOpen]);
 
-  const handleSubmit = (e) => {
+  const fetchComments = async () => {
+      try {
+          setLoading(true);
+          const data = await getComments(task.id);
+          // Backend returns: [{ idComentario, contenido, fecha, idTarea, idUsuario, ... }]
+          // We map to UI format
+          const formatted = data.map(c => {
+               const fullName = (c.nombre && c.apellido) ? `${c.nombre} ${c.apellido}`.trim() : c.nombre || c.apellido || c.usuario;
+               return {
+                  id: c.idcomentario,
+                  user: fullName || 'Usuario',
+                  text: c.contenido,
+                  date: new Date(c.fecha).toLocaleString()
+               };
+          });
+          setComments(formatted);
+      } catch (error) {
+          console.error("Error fetching comments:", error);
+      } finally {
+          setLoading(false);
+      }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
 
-    const comment = {
-        id: Date.now(),
-        user: 'Jose Cortez', // usuario de mentira
-        text: newComment,
-        date: new Date().toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true, month: 'numeric', day: 'numeric', year: '2-digit' })
-    };
-    
-    // actualiza rapido pa que no se quejen
-    setComments([...comments, comment]);
-    
-    // avisale al padre
-    if (onAddComment) {
-        onAddComment(task?.id, comment);
+    try {
+        await createComment(task.id, newComment);
+        
+        // Refresh comments
+        await fetchComments();
+        
+        setNewComment('');
+        
+        // Notify parent if needed (optional)
+        if (onAddComment) {
+            onAddComment(task.id, { text: newComment });
+        }
+    } catch (error) {
+        console.error("Error creating comment:", error);
+        alert("Error al crear comentario: " + error.message);
     }
-    
-    setNewComment('');
   };
 
   if (!isOpen) return null;

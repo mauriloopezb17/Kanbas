@@ -53,7 +53,7 @@ const BoardColumn = ({ title, tasks, color, onAddTask, onEditTask, onDeleteTask,
 };
 
 const renderAddTaskButton = (title, onAddTask) => {
-    if (title === "To do") {
+    if (title === "To do" && onAddTask) {
         return (
             <button 
               onClick={onAddTask}

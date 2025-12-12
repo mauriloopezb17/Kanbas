@@ -19,7 +19,9 @@ import {
 } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 
-const BoardPage = ({ project, onBack }) => {
+import { getTasksByProject, deleteTask, autoAssignTask } from '../../tasks/services/tasksService';
+
+const BoardPage = ({ project, user, onBack, onLogout }) => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [deletingTask, setDeletingTask] = useState(null);
@@ -41,29 +43,113 @@ const BoardPage = ({ project, onBack }) => {
       pendingTransition: null // { taskId, source, dest, task }
   });
 
-  // datos de mentira
   const [tasks, setTasks] = useState({
-    todo: [
-      { id: 1, title: 'Diseñar Icono App', description: 'Crear versiones del icono en diferentes resoluciones para iOS y Android. Exportar assets.', members: [] },
-      { id: 2, title: 'Definir paleta de colores', description: 'Seleccionar colores primarios, secundarios y de acento. Verificar contraste y accesibilidad.', members: [] },
-      { id: 3, title: 'Investigar competencia', description: 'Analizar apps similares. Documentar features clave y flow de usuario.', members: [] },
-    ],
-    inProgress: [
-      { id: 4, title: 'Desarrollar Login', description: 'Implementar pantalla de login. Conectar con API de autenticación. Validar inputs.', members: [] },
-      { id: 5, title: 'Integrar API Maps', description: 'Configurar Google Maps SDK. Mostrar ubicación del usuario en tiempo real.', members: [{name: 'Jose Cortez'}] },
-      { id: 6, title: 'Crear componente Botón', description: 'Desarrollar componente reutilizable Button con variantes primary, secondary, ghost.', members: [] },
-    ],
-    review: [
-      { id: 7, title: 'Testear en iOS', description: 'Verificar funcionamiento en iPhone 14 y 15. Checar notch y safe areas.', members: [] },
-      { id: 8, title: 'Revisión de textos', description: 'Corregir ortografía y redacción en onboarding y perfil.', members: [] },
-      { id: 9, title: 'Code Review: Auth', description: 'Revisar PR #123. Checar manejo de tokens y seguridad.', members: [] },
-    ],
-    done: [
-      { id: 10, title: 'Configurar repositorio', description: 'Crear repo en GitHub. Configurar .gitignore y reglas de protección de main.', members: [] },
-      { id: 11, title: 'Comprar dominio', description: 'Adquirir dominio .com para landing page. Configurar DNS.', members: [] },
-      { id: 12, title: 'Setup CI/CD', description: 'Configurar flujo de despliegue automático con GitHub Actions.', members: [] },
-    ]
+    todo: [],
+    inProgress: [],
+    review: [],
+    done: []
   });
+
+  /*
+   * PERMISSIONS SYSTEM
+   */
+  const userRole = React.useMemo(() => {
+     if (!user || !project) return 'TEAM_MEMBER';
+     if (project.idSRM === user.idUsuario) return 'SRM';
+     if (project.idPO === user.idUsuario) return 'PO';
+     if (project.idSDM === user.idUsuario) return 'SDM';
+     return 'TEAM_MEMBER';
+  }, [user, project]);
+
+  const isSuperUser = user?.idUsuario === 3 || user?.email === 'alejandro.a.bobarin.marquez@gmail.com';
+
+  const permissions = React.useMemo(() => {
+      // Superuser override
+      if (isSuperUser) {
+          return {
+              canAdd: true,
+              canEdit: true,
+              canDelete: true,
+              canAssignSelf: true,
+              canReview: true,
+              canMoveTodoInProgress: true,
+              canMoveInProgressReview: true,
+              canMoveReviewDone: true,
+              canMoveBack: true,
+              canGenerateReport: true
+          };
+      }
+
+      const isSRM = userRole === 'SRM';
+      const isPO = userRole === 'PO';
+      const isSDM = userRole === 'SDM';
+      const isTeamMember = userRole === 'TEAM_MEMBER';
+      // Reviewers are usually PO, SDM, SRM
+      const isReviewer = isSRM || isPO || isSDM;
+
+      return {
+          canAdd: isSRM,
+          canEdit: isSRM,
+          canDelete: isSRM,
+          
+          // Generar reporte -> PO y SDM
+          canGenerateReport: isPO || isSDM,
+
+          // Asignarse a sí mismo (drag from todo or click assign) -> Team Member
+          canAssignSelf: isTeamMember,
+          
+          // Mover de InProgress a Review -> Team Member
+          canMoveInProgressReview: isTeamMember,
+          
+          // Mover de Todo a InProgress -> Team Member
+          canMoveTodoInProgress: isTeamMember,
+
+          // Mover Review -> Done (Aprobar) o Review -> InProgress (Rechazar)
+          canMoveReviewDone: isReviewer,
+          canMoveBack: isReviewer, // De review a in progress
+      };
+  }, [userRole, isSuperUser]);
+
+  const [loading, setLoading] = useState(true);
+
+  React.useEffect(() => {
+    const fetchTasks = async () => {
+      if (!project?.id && !project?.idProyecto) return;
+      try {
+        setLoading(true);
+        const projectId = project.id || project.idProyecto;
+        const data = await getTasksByProject(projectId);
+        // Backend devuelve { todo: [], inProgress: [], ... }
+        // Asegurar que mapeamos correctamete los miembros/asignados si vienen diferentes
+        // Backend usa "asignados" array, Frontend usa "members" en mocks.
+        // Vamos a normalizar keys si es necesario.
+        
+        // Helper para normalizar tarea
+        const normalizeTask = (t) => ({
+             id: t.idTarea || t.id,
+             title: t.titulo || t.title,
+             description: t.descripcion || t.description,
+             members: (t.asignados || []).map(a => ({ name: a.nombreUsuario || a.name || "Usuario" })),
+             ...t
+        });
+
+        const normalizedData = {
+            todo: (data.todo || []).map(normalizeTask),
+            inProgress: (data.inProgress || []).map(normalizeTask),
+            review: (data.review || []).map(normalizeTask),
+            done: (data.done || []).map(normalizeTask),
+        };
+
+        setTasks(normalizedData);
+      } catch (error) {
+        console.error("Error loading tasks:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTasks();
+  }, [project]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -102,22 +188,23 @@ const BoardPage = ({ project, onBack }) => {
   const isValidTransition = (startContainer, overContainer) => {
       // 1. si es el mismo lugar todo bien
       if (startContainer === overContainer) return true;
-      
-      const validMoves = {
-          'todo': ['inProgress'],
-          'inProgress': ['review'], // puede ir a review
-          'review': ['inProgress', 'done'], // puede regresar a progress (rechazar) o ir a done (aceptar)
-          'done': []
-      };
-      
-      const allowedDestinations = validMoves[startContainer] || [];
-      
-      if (!allowedDestinations.includes(overContainer)) {
-          console.warn(`[DnD Block] Invalid Move: ${startContainer} -> ${overContainer}`);
-          return false;
+
+      // Reglas de negocio (RBAC)
+      if (startContainer === 'todo' && overContainer === 'inProgress') {
+          return permissions.canMoveTodoInProgress;
+      }
+      if (startContainer === 'inProgress' && overContainer === 'review') {
+          return permissions.canMoveInProgressReview;
+      }
+      if (startContainer === 'review' && (overContainer === 'done' || overContainer === 'inProgress')) {
+          // Review -> Done (Aprobar)
+          // Review -> InProgress (Rechazar)
+          return permissions.canMoveReviewDone || permissions.canMoveBack;
       }
       
-      return true;
+      // Si llegamos aqui, es un movimiento no contemplado explicitamente en las reglas,
+      // por lo que asumimos que no esta permitido (ej: Done -> Todo).
+      return false;
   };
 
   const handleDragOver = (event) => {
@@ -290,24 +377,34 @@ const BoardPage = ({ project, onBack }) => {
     dragStartContainerRef.current = null;
   };
 
-  const handleConfirmAssignment = () => {
-    // meter al usuario
+  const handleConfirmAssignment = async () => {
     if (pendingAssignment) {
         const { task } = pendingAssignment;
-        const updatedTask = { 
-            ...task, 
-            members: [...task.members, { name: "Jose Cortez" }] // usuario de mentira
-        };
         
-        // actualizar estado
-        setTasks(prev => ({
-            ...prev,
-            inProgress: prev.inProgress.map(t => t.id === task.id ? updatedTask : t)
-        }));
+        try {
+            const projectId = project.id || project.idProyecto;
+            await autoAssignTask(task.id, projectId);
+
+            const updatedTask = { 
+                ...task, 
+                members: [...(task.members || []), { name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || user?.usuario }] 
+            };
+            
+            // actualizar estado
+            setTasks(prev => ({
+                ...prev,
+                inProgress: prev.inProgress.map(t => t.id === task.id ? updatedTask : t)
+            }));
+        } catch (error) {
+            console.error("Error creating assignment:", error);
+            alert("Error al auto-asignarte la tarea: " + error.message);
+        }
     }
     setAssignModalOpen(false);
     setPendingAssignment(null);
   };
+
+
 
   const handleCancelAssignment = () => {
     // deshacer el movimiento
@@ -390,7 +487,6 @@ const BoardPage = ({ project, onBack }) => {
       setTransitionModal({ isOpen: false, type: null, pendingTransition: null });
   };
 
-
   const handleEditTask = (task) => {
     setEditingTask(task);
     setIsTaskModalOpen(true);
@@ -400,13 +496,23 @@ const BoardPage = ({ project, onBack }) => {
     setDeletingTask(task);
   };
 
-  const handleConfirmDelete = () => {
-    const newTasks = { ...tasks };
-    for (const column in newTasks) {
-        newTasks[column] = newTasks[column].filter(t => t.id !== deletingTask.id);
+  const handleConfirmDelete = async () => {
+    if (!deletingTask) return;
+
+    try {
+        await deleteTask(deletingTask.id);
+        
+        // Optimistic update or refresh
+        const newTasks = { ...tasks };
+        for (const column in newTasks) {
+            newTasks[column] = newTasks[column].filter(t => t.id !== deletingTask.id);
+        }
+        setTasks(newTasks);
+        setDeletingTask(null);
+    } catch (error) {
+        console.error("Error deleting task:", error);
+        alert("Error al eliminar la tarea");
     }
-    setTasks(newTasks);
-    setDeletingTask(null);
   };
 
   const handleCloseTaskModal = () => {
@@ -441,11 +547,13 @@ const BoardPage = ({ project, onBack }) => {
         });
     }
   };
-  
 
   const handleManualAssign = (task) => {
-      const currentUser = "Jose Cortez";
-      const isAssigned = task.members.some(m => m.name === currentUser);
+      // Check if already assigned
+      // members list might have objects { name: "..." } or { idUsuario: ... }
+      // We check by name for now as that's what we have locally, ideally check by ID if available
+      const userName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
+      const isAssigned = task.members.some(m => m.name === userName || m.name === user?.usuario);
       
       if (!isAssigned) {
           setPendingAssignment({
@@ -455,11 +563,20 @@ const BoardPage = ({ project, onBack }) => {
               task: task
           });
           setAssignModalOpen(true);
+      } else {
+          alert("Ya estás asignado a esta tarea.");
       }
   };
 
   return (
-    <MainLayout isBoardView={true} projectName={project?.name || "Proyecto Ejemplo"} onLogoClick={onBack}>
+    <MainLayout 
+      isBoardView={true} 
+      projectName={project?.name || "Proyecto Ejemplo"} 
+      onLogoClick={onBack}
+      canGenerateReport={permissions.canGenerateReport}
+      onLogout={onLogout}
+      user={user}
+    >
       <DndContext 
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -473,9 +590,9 @@ const BoardPage = ({ project, onBack }) => {
               title="To do" 
               tasks={tasks.todo} 
               color="#2563eb" 
-              onAddTask={() => setIsTaskModalOpen(true)}
-              onEditTask={handleEditTask}
-              onDeleteTask={handleDeleteTask}
+              onAddTask={permissions.canAdd ? () => setIsTaskModalOpen(true) : undefined}
+              onEditTask={permissions.canEdit ? handleEditTask : undefined}
+              onDeleteTask={permissions.canDelete ? handleDeleteTask : undefined}
               onCommentsTask={handleOpenComments}
             />
             <BoardColumn 
@@ -483,18 +600,18 @@ const BoardPage = ({ project, onBack }) => {
                 title="In progress" 
                 tasks={tasks.inProgress} 
                 color="#ef4444" 
-                onEditTask={handleEditTask}
-                onDeleteTask={handleDeleteTask}
+                onEditTask={permissions.canEdit ? handleEditTask : undefined}
+                onDeleteTask={permissions.canDelete ? handleDeleteTask : undefined}
                 onCommentsTask={handleOpenComments}
-                onAssignSelf={handleManualAssign}
+                onAssignSelf={permissions.canAssignSelf ? handleManualAssign : undefined}
             />
             <BoardColumn 
                 id="review"
                 title="Review" 
                 tasks={tasks.review} 
                 color="#f97316" 
-                onEditTask={handleEditTask}
-                onDeleteTask={handleDeleteTask}
+                onEditTask={permissions.canEdit ? handleEditTask : undefined}
+                onDeleteTask={permissions.canDelete ? handleDeleteTask : undefined}
                 onCommentsTask={handleOpenComments}
             />
             <BoardColumn 
@@ -502,8 +619,8 @@ const BoardPage = ({ project, onBack }) => {
                 title="Done" 
                 tasks={tasks.done} 
                 color="#10b981" 
-                onEditTask={handleEditTask}
-                onDeleteTask={handleDeleteTask}
+                onEditTask={permissions.canEdit ? handleEditTask : undefined}
+                onDeleteTask={permissions.canDelete ? handleDeleteTask : undefined}
                 onCommentsTask={handleOpenComments}
             />
           </div>
@@ -519,6 +636,7 @@ const BoardPage = ({ project, onBack }) => {
         isOpen={isTaskModalOpen} 
         onClose={handleCloseTaskModal} 
         taskToEdit={editingTask}
+        project={project}
       />
       
       <DeleteTaskModal 

@@ -1,6 +1,6 @@
 import React from 'react';
 
-const ProjectCard = ({ color, name, onClick }) => {
+const ProjectCard = ({ color, name, role, onClick }) => {
   return (
     <div 
       onClick={onClick}
@@ -10,8 +10,9 @@ const ProjectCard = ({ color, name, onClick }) => {
         className="h-36 w-full" 
         style={{ backgroundColor: color }}
       ></div>
-      <div className="h-12 flex items-center px-4 animate-gradient-bg">
-        <span className="text-white font-medium text-lg truncate">{name}</span>
+      <div className="h-12 flex flex-col justify-center px-4 animate-gradient-bg">
+        <span className="text-white font-medium text-lg truncate leading-tight">{name}</span>
+        {role && <span className="text-white/80 text-xs font-bold uppercase tracking-wider">{role}</span>}
       </div>
     </div>
   );

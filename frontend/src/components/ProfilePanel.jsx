@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const ProfilePanel = ({ isOpen, onClose }) => {
+const ProfilePanel = ({ isOpen, onClose, onLogout, user }) => {
   const [isExiting, setIsExiting] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
 
@@ -42,8 +42,8 @@ const ProfilePanel = ({ isOpen, onClose }) => {
         <div className="bg-white p-6 rounded-t-[2rem] relative">
             <div className="flex justify-between items-start">
                 <div>
-                    <h2 className="text-xl font-bold text-kanbas-blue font-sans">Usuario1234</h2>
-                    <p className="text-gray-500 text-sm font-medium">Juan Perez</p>
+                    <h2 className="text-xl font-bold text-kanbas-blue font-sans">{user?.usuario || 'Usuario'}</h2>
+                    <p className="text-gray-500 text-sm font-medium">{user?.nombre || user?.firstName || ''} {user?.apellido || user?.lastName || ''}</p>
                 </div>
                 {/* Profile Icon Clone for overlap effect */}
                 <div className="h-9 w-9 bg-[#f0f0f5] rounded-full flex items-center justify-center -mt-1 -mr-1">
@@ -56,7 +56,10 @@ const ProfilePanel = ({ isOpen, onClose }) => {
 
         {/* Content */}
         <div className="p-6">
-            <button className="w-full bg-kanbas-blue hover:bg-blue-600 text-white font-bold py-3 rounded-full transition-colors shadow-md">
+            <button 
+              onClick={onLogout}
+              className="w-full bg-kanbas-blue hover:bg-blue-600 text-white font-bold py-3 rounded-full transition-colors shadow-md"
+            >
                 Cerrar Sesion
             </button>
         </div>

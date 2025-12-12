@@ -57,9 +57,11 @@ class MensajeRepository {
         m.idmensaje,
         m.contenido,
         m.fecha,
-        m.idusuario_emisor
+        m.idusuario_emisor,
+        CONCAT(u.nombre, ' ', u.apellido) as nombre_emisor
      FROM mensajes m
      JOIN mensajes_usuarios mu ON mu.idmensaje = m.idmensaje
+     JOIN usuarios u ON u.idusuario = m.idusuario_emisor
      WHERE mu.idusuarioreceptor = $1
      ORDER BY m.fecha DESC`,
       [idUsuario]

@@ -1,40 +1,88 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { getAllUsers, sendMessage } from '../features/messages/services/messagesService';
 
 const NewMessageModal = ({ isOpen, onClose }) => {
   // estados
-  const [recipient, setRecipient] = useState('Nadie');
-  const [selectedRecipients, setSelectedRecipients] = useState([]);
+  const [recipientId, setRecipientId] = useState('');
+  const [selectedRecipients, setSelectedRecipients] = useState([]); // Array of objects { id, name }
   const [content, setContent] = useState('');
+  const [availableUsers, setAvailableUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   
-  // datos dummy
-  const availableRecipients = ['Nadie', 'Pedro Parques', 'Jose Cortez', 'Ana Torres', 'Miguel Pacheco', 'Orlando Rivera'];
-
   // animacion
   const [hasAnimated, setHasAnimated] = useState(false);
   const containerRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
-      setRecipient('Nadie');
       setContent('');
       setSelectedRecipients([]);
+      setRecipientId('');
+      setSuccessMessage('');
       setHasAnimated(false);
+      fetchUsers();
     }
   }, [isOpen]);
+
+  const fetchUsers = async () => {
+    try {
+        setLoading(true);
+        const users = await getAllUsers();
+        setAvailableUsers(users);
+    } catch (error) {
+        console.error("Error fetching users:", error);
+    } finally {
+        setLoading(false);
+    }
+  };
 
   if (!isOpen) return null;
 
   const handleAddRecipient = () => {
-    if (recipient && recipient !== 'Nadie' && !selectedRecipients.some(r => r.name === recipient)) {
-      setSelectedRecipients([...selectedRecipients, { name: recipient }]);
-      setRecipient('Nadie');
-    }
+      if (!recipientId) return;
+
+      const userToAdd = availableUsers.find(u => u.idusuario.toString() === recipientId.toString());
+      if (!userToAdd) return;
+
+      if (!selectedRecipients.some(r => r.id === userToAdd.idusuario)) {
+          setSelectedRecipients([...selectedRecipients, { 
+              id: userToAdd.idusuario, 
+              name: `${userToAdd.nombre} ${userToAdd.apellido}` 
+          }]);
+          setRecipientId('');
+      }
   };
 
   const handleRemoveRecipient = (index) => {
     const updated = [...selectedRecipients];
     updated.splice(index, 1);
     setSelectedRecipients(updated);
+  };
+
+  const handleSubmit = async () => {
+      if (selectedRecipients.length === 0 || !content.trim()) {
+          alert("Debes seleccionar al menos un receptor y escribir un mensaje.");
+          return;
+      }
+
+      try {
+          const payload = {
+              receptores: selectedRecipients.map(r => r.id),
+              contenido: content
+          };
+          
+          await sendMessage(payload);
+          setSuccessMessage("Mensaje enviado correctamente");
+          
+          setTimeout(() => {
+             setSuccessMessage('');
+             onClose();
+          }, 1500);
+      } catch (error) {
+          console.error("Error sending message:", error);
+          alert("Error al enviar el mensaje: " + error.message);
+      }
   };
 
   return (
@@ -60,11 +108,17 @@ const NewMessageModal = ({ isOpen, onClose }) => {
               <div className="flex items-center space-x-2 mb-4">
                  <div className="relative w-full">
                     <select 
-                        value={recipient}
-                        onChange={(e) => setRecipient(e.target.value)}
+                        value={recipientId}
+                        onChange={(e) => setRecipientId(e.target.value)}
                         className="w-full px-4 py-3 rounded-full bg-[#cbd5e1] border border-kanbas-blue text-gray-800 focus:outline-none focus:ring-2 focus:ring-kanbas-blue appearance-none cursor-pointer"
+                        disabled={loading}
                     >
-                        {availableRecipients.map(r => <option key={r} value={r}>{r}</option>)}
+                        <option value="">Seleccionar usuario...</option>
+                        {availableUsers.map(u => (
+                            <option key={u.idusuario} value={u.idusuario}>
+                                {u.nombre} {u.apellido} ({u.usuario})
+                            </option>
+                        ))}
                     </select>
                     <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-kanbas-blue">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -118,8 +172,11 @@ const NewMessageModal = ({ isOpen, onClose }) => {
 
             {/* Botones */}
             <div className="flex items-center justify-end space-x-4 pt-2">
+              {successMessage && (
+                  <span className="text-green-600 font-bold animate-fade-in">{successMessage}</span>
+              )}
               <button type="button" onClick={onClose} className="text-kanbas-blue font-bold hover:underline text-lg">Cancelar</button>
-              <button type="button" onClick={() => { console.log('Enviando mensaje', { selectedRecipients, content }); onClose(); }} className="bg-kanbas-blue text-white font-bold py-3 px-8 rounded-full hover:bg-blue-600 transition duration-300 shadow-md">Enviar</button>
+              <button type="button" onClick={handleSubmit} className="bg-kanbas-blue text-white font-bold py-3 px-8 rounded-full hover:bg-blue-600 transition duration-300 shadow-md">Enviar</button>
             </div>
 
           </form>

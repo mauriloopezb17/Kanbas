@@ -3,7 +3,7 @@ import logoWhite from '../assets/logo_mono.png';
 import NotificationsPanel from '../components/NotificationsPanel';
 import ProfilePanel from '../components/ProfilePanel';
 
-const MainLayout = ({ children, isBoardView = false, projectName = '', onLogoClick }) => {
+const MainLayout = ({ children, isBoardView = false, projectName = '', onLogoClick, canGenerateReport = false, onLogout, user }) => {
   const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);
 
@@ -37,9 +37,11 @@ const MainLayout = ({ children, isBoardView = false, projectName = '', onLogoCli
         <div className="flex items-center space-x-4">
            {isBoardView && (
              <>
-               <button className="bg-white text-kanbas-blue px-4 py-1 rounded-full font-bold text-sm shadow-sm hover:bg-gray-100 transition">
-                 Generar Reporte
-               </button>
+               {canGenerateReport && (
+                 <button className="bg-white text-kanbas-blue px-4 py-1 rounded-full font-bold text-sm shadow-sm hover:bg-gray-100 transition">
+                   Generar Reporte
+                 </button>
+               )}
                {/* Separator */}
                <div className="h-8 w-1 bg-white/30 mx-2"></div>
              </>
@@ -75,6 +77,8 @@ const MainLayout = ({ children, isBoardView = false, projectName = '', onLogoCli
       <ProfilePanel 
         isOpen={isProfileOpen} 
         onClose={() => setIsProfileOpen(false)} 
+        onLogout={onLogout}
+        user={user}
       />
 
       {/* Contenido Principal */}
